@@ -69,16 +69,47 @@ def _slugify(name: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Markdown stripping
+# ---------------------------------------------------------------------------
+
+_MD_STRIP: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"!\[([^\]]*)\]\([^)]*\)"), r"\1"),   # images -> alt text
+    (re.compile(r"\[([^\]]+)\]\([^)]*\)"), r"\1"),    # links -> label
+    (re.compile(r"~~(.+?)~~"), r"\1"),                 # strikethrough
+    (re.compile(r"\*{3}(.+?)\*{3}"), r"\1"),           # bold+italic ***
+    (re.compile(r"\*{2}(.+?)\*{2}"), r"\1"),           # bold **
+    (re.compile(r"_{3}(.+?)_{3}"), r"\1"),             # bold+italic ___
+    (re.compile(r"_{2}(.+?)_{2}"), r"\1"),             # bold __
+    (re.compile(r"`(.+?)`"), r"\1"),                   # inline code
+    (re.compile(r"^#{1,6}\s+"), ""),                   # headings
+    (re.compile(r"^[-*+]\s+"), ""),                    # unordered list bullets
+    (re.compile(r"^\d+\.\s+"), ""),                    # ordered list items
+    (re.compile(r"^>\s*"), ""),                        # blockquotes
+    (re.compile(r"^[-*_]{3,}\s*$"), ""),               # horizontal rules
+    (re.compile(r"[*_#]"), ""),                        # remaining markers
+]
+
+
+def strip_markdown(text: str) -> str:
+    """Strip markdown formatting, preserving plain text content."""
+    for pattern, repl in _MD_STRIP:
+        text = pattern.sub(repl, text)
+    return text.strip()
+
+
+# ---------------------------------------------------------------------------
 # Import pipeline
 # ---------------------------------------------------------------------------
 
 def convert_text_file(file_path: str) -> list[str]:
-    """Read a text file and return non-empty stripped lines as chapters."""
+    """Read a plain text or Markdown file; return non-empty lines as chapters."""
     try:
         with open(file_path, "r", encoding="utf-8") as f:
-            chapters = [line.strip() for line in f if line.strip()]
+            raw_lines = f.readlines()
     except OSError as e:
         raise OSError(f"Could not read '{file_path}': {e}") from e
+
+    chapters = [stripped for line in raw_lines if (stripped := strip_markdown(line))]
 
     if not chapters:
         raise ValueError(f"'{file_path}' contains no text after stripping whitespace")

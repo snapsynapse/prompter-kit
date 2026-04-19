@@ -16,6 +16,7 @@ from elgato_prompter_tools import (
     list_scripts,
     load_script_json,
     save_json_to_texts,
+    strip_markdown,
     update_appsettings,
 )
 
@@ -334,6 +335,74 @@ def test_export_all_deduplicates_filenames(tmp_path):
 
 def test_export_all_empty_returns_empty(tmp_path):
     assert export_all(str(tmp_path / "out"), base_dir=str(tmp_path)) == []
+
+
+# ---------------------------------------------------------------------------
+# strip_markdown
+# ---------------------------------------------------------------------------
+
+def test_strip_markdown_headings():
+    assert strip_markdown("# Title") == "Title"
+    assert strip_markdown("## Section") == "Section"
+    assert strip_markdown("### Sub") == "Sub"
+
+
+def test_strip_markdown_bold_italic():
+    assert strip_markdown("**bold**") == "bold"
+    assert strip_markdown("*italic*") == "italic"
+    assert strip_markdown("***both***") == "both"
+    assert strip_markdown("__bold__") == "bold"
+    assert strip_markdown("_italic_") == "italic"
+
+
+def test_strip_markdown_links():
+    assert strip_markdown("[click here](https://example.com)") == "click here"
+
+
+def test_strip_markdown_images():
+    assert strip_markdown("![alt text](image.png)") == "alt text"
+
+
+def test_strip_markdown_inline_code():
+    assert strip_markdown("`code`") == "code"
+
+
+def test_strip_markdown_list_bullets():
+    assert strip_markdown("- item one") == "item one"
+    assert strip_markdown("* item two") == "item two"
+    assert strip_markdown("+ item three") == "item three"
+    assert strip_markdown("1. ordered") == "ordered"
+
+
+def test_strip_markdown_blockquote():
+    assert strip_markdown("> quoted text") == "quoted text"
+
+
+def test_strip_markdown_strikethrough():
+    assert strip_markdown("~~removed~~") == "removed"
+
+
+def test_strip_markdown_no_markdown():
+    assert strip_markdown("Plain sentence.") == "Plain sentence."
+
+
+def test_strip_markdown_mixed():
+    assert strip_markdown("## Welcome to **the show**") == "Welcome to the show"
+
+
+def test_convert_text_file_strips_markdown(tmp_path):
+    f = tmp_path / "script.md"
+    f.write_text("# Act One\n**Bold line**\nPlain line\n", encoding="utf-8")
+    assert convert_text_file(str(f)) == ["Act One", "Bold line", "Plain line"]
+
+
+def test_convert_text_file_horizontal_rule_skipped(tmp_path):
+    f = tmp_path / "script.md"
+    f.write_text("Before\n---\nAfter\n", encoding="utf-8")
+    result = convert_text_file(str(f))
+    assert "---" not in result
+    assert "Before" in result
+    assert "After" in result
 
 
 # ---------------------------------------------------------------------------
