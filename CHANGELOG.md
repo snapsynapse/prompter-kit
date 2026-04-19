@@ -7,12 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-19
+
+### Added
+- `delete` command: remove a script by name or GUID
+- `rename` command: change a script's friendly name
+- `reindex` command: reorder the library, or normalize indices with no args
+- `edit` command: open a script's chapters in `$EDITOR`
+- `backup` command: zip all scripts plus `AppSettings.json` into a timestamped archive
+- `restore` command: restore from a backup zip, with `--merge` to preserve existing scripts
+- `camerahub stop` / `camerahub start`: quit or relaunch Camera Hub
+  (macOS `osascript`, Windows `taskkill`)
+- `--restart` flag on `import`: auto-stop Camera Hub before write, auto-start after
+- Local web GUI (`prompter_kit_gui.py`) wrapping all CLI functions with
+  drag-and-drop import, browser-based backup/restore, and auto-open on launch
+- Landing page at https://prompterkit.app/ with OG image and `llms.txt`
+
 ### Changed
 - Renamed project to PrompterKit. CLI module is now `prompter_kit.py` and GUI
   module is `prompter_kit_gui.py`. Repository moved to
   `snapsynapse/prompter-kit`; canonical site is https://prompterkit.app/.
   Any scripts or imports referencing the old `elgato_prompter_tools` module
   names must be updated.
+- README rewritten against the current CLI surface.
+- ROADMAP trimmed to remaining work (double-click app bundling).
 
 ## [0.2.0] - 2026-04-18
 
