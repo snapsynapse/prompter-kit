@@ -1,60 +1,89 @@
 # PrompterKit
 
-Elgato Camera Hub stores your teleprompter scripts in opaque JSON files with no
-official import or export path. This tool gives you a command line for getting
-scripts in and out -- including from Markdown files.
+![PrompterKit -- Manage your Elgato Prompter scripts](https://prompterkit.app/imgs/og.png)
+
+Manage your Elgato Prompter scripts from the command line or a local web GUI.
+Camera Hub stores scripts in opaque JSON with no import, export, rename,
+reorder, or backup path. PrompterKit fills every gap.
+
+Site: https://prompterkit.app/
+Repo: https://github.com/snapsynapse/prompter-kit
 
 Based on [spieldbergo/elgato_prompter_text_importer](https://github.com/spieldbergo/elgato_prompter_text_importer) (MIT).
-Rewritten with export support, Markdown stripping, atomic writes, and a full test suite.
 
 ## Requirements
 
 - Python 3.10+
 - Elgato Camera Hub installed
+- Flask (GUI only): `pip install flask`
 
-Close Camera Hub before running any command.
+Close Camera Hub before any write operation, or use `--restart` / the
+`camerahub` subcommand to have PrompterKit do it for you.
 
 ## Quick start
 
+### CLI
+
 ```
-# Import a script (plain text or Markdown)
-python3 elgato_prompter_tools.py import script.txt --name "My Script"
+# Import a .txt or .md file (one line per chapter)
+python3 prompter_kit.py import script.md --name "My Script"
+
+# Import and auto-restart Camera Hub around the write
+python3 prompter_kit.py import script.txt --name "My Script" --restart
 
 # List registered scripts
-python3 elgato_prompter_tools.py export --list
+python3 prompter_kit.py export --list
 
-# Export one script by name
-python3 elgato_prompter_tools.py export --name "My Script" --output my_script.txt
+# Export one script by name or GUID
+python3 prompter_kit.py export --name "My Script" --output my_script.txt
 
-# Export everything
-python3 elgato_prompter_tools.py export --all --output ./exported/
+# Export every script to a directory
+python3 prompter_kit.py export --all --output ./exported/
+
+# Rename, delete, reorder
+python3 prompter_kit.py rename "Old Name" "New Name"
+python3 prompter_kit.py delete "My Script"
+python3 prompter_kit.py reindex "Intro" "Act One" "Outro"
+
+# Edit chapters in $EDITOR
+python3 prompter_kit.py edit "My Script"
+
+# Back up and restore the whole library
+python3 prompter_kit.py backup --output backup.zip
+python3 prompter_kit.py restore backup.zip           # replaces library
+python3 prompter_kit.py restore backup.zip --merge   # adds new only
+
+# Quit or relaunch Camera Hub
+python3 prompter_kit.py camerahub stop
+python3 prompter_kit.py camerahub start
 ```
 
-## Features
+### GUI
 
-| Feature | Detail |
+```
+python3 prompter_kit_gui.py
+```
+
+Opens a local web app in your browser for import, export, rename, delete,
+reorder, backup, and restore, with drag-and-drop file input.
+
+## Commands
+
+| Command | What it does |
 |---|---|
-| Import | Reads `.txt` or `.md` files; one line per Prompter chapter |
-| Markdown stripping | `#`, `*`, `_` and other formatting removed on import |
-| Export by name | Match on friendly name, write to `.txt` |
-| Export by GUID | Direct lookup, no name collision risk |
-| Export all | Dumps every registered script to a directory |
-| List | Tabular view of all registered scripts with GUIDs |
-| Atomic writes | Temp-file-then-rename prevents corruption on interrupted writes |
-| Rollback | Script JSON is removed if AppSettings update fails |
-| Cross-platform | macOS and Windows paths handled automatically |
+| `import` | Register a `.txt` or `.md` file as a Prompter script. Markdown formatting is stripped. |
+| `export` | Write a script, or all scripts, back to `.txt`. Supports `--list`, `--name`, `--guid`, `--all`. |
+| `delete` | Remove a script from `Texts/` and `AppSettings.json`. |
+| `rename` | Change a script's friendly name. |
+| `reindex` | Reorder the library. Pass names/GUIDs in desired order, or no args to normalize. |
+| `edit` | Open a script's chapters in `$EDITOR` and re-save on close. |
+| `backup` | Zip all scripts plus `AppSettings.json` into a timestamped archive. |
+| `restore` | Restore from a backup zip. `--merge` keeps existing scripts. |
+| `camerahub stop` / `start` | Quit or relaunch Camera Hub (macOS `osascript`, Windows `taskkill`). |
 
 ## Script format
 
-Plain `.txt` or `.md` file. Each non-empty line becomes one chapter in Prompter.
-
-```
-This is chapter one.
-This is chapter two.
-This is chapter three.
-```
-
-Markdown headings, bold, italic, links, and list bullets are stripped automatically:
+Plain `.txt` or `.md`. Each non-empty line becomes one chapter.
 
 ```markdown
 # Act One
@@ -63,26 +92,17 @@ Markdown headings, bold, italic, links, and list bullets are stripped automatica
 - **Tonight** we cover three topics.
 ```
 
-imports as three plain chapters.
+imports as three plain chapters. Markdown headings, bold, italic, links,
+images, inline code, blockquotes, list bullets, and strikethrough are stripped.
 
-## Usage reference
+## Safety
 
-### Import
-
-```
-python3 elgato_prompter_tools.py import <file> --name "Script Name" [--index N]
-```
-
-`--index` controls sort order in Prompter (default: 0).
-
-### Export
-
-```
-python3 elgato_prompter_tools.py export --list
-python3 elgato_prompter_tools.py export --name "Script Name" --output out.txt
-python3 elgato_prompter_tools.py export --guid <GUID> --output out.txt
-python3 elgato_prompter_tools.py export --all --output ./exported/
-```
+- Atomic writes: JSON is written to a temp file then renamed, so an
+  interrupted write cannot corrupt `AppSettings.json`.
+- Rollback: if updating `AppSettings.json` fails after writing a new script
+  JSON, the script JSON is removed.
+- Validation: `restore` rejects zips missing `AppSettings.json` or with
+  unexpected paths.
 
 ## Data locations
 
@@ -96,6 +116,9 @@ python3 elgato_prompter_tools.py export --all --output ./exported/
 ```
 python3 -m pytest tests/ -v
 ```
+
+71 tests cover import, export, CRUD, backup/restore, Markdown stripping,
+and atomic-write rollback.
 
 ## Contributing
 

@@ -1,6 +1,6 @@
 """
-Elgato Prompter Tools -- local web GUI
-Run: python3 elgato_prompter_tools_gui.py
+PrompterKit -- local web GUI
+Run: python3 prompter_kit_gui.py
 """
 import io
 import os
@@ -20,7 +20,7 @@ from flask import (
     url_for,
 )
 
-from elgato_prompter_tools import (
+from prompter_kit import (
     delete_script,
     export_script,
     import_script,
@@ -42,7 +42,7 @@ _TEMPLATE = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Elgato Prompter Tools</title>
+<title>PrompterKit</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -132,7 +132,7 @@ _TEMPLATE = """<!doctype html>
 <body>
 
 <header>
-  <h1>Elgato Prompter Tools</h1>
+  <h1>PrompterKit</h1>
   <span>local GUI</span>
 </header>
 

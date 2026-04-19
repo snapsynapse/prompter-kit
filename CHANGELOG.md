@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Renamed project to PrompterKit. CLI module is now `prompter_kit.py` and GUI
+  module is `prompter_kit_gui.py`. Repository moved to
+  `snapsynapse/prompter-kit`; canonical site is https://prompterkit.app/.
+  Any scripts or imports referencing the old `elgato_prompter_tools` module
+  names must be updated.
+
 ## [0.2.0] - 2026-04-18
 
 ### Added

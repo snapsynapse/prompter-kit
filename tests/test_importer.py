@@ -5,7 +5,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from elgato_prompter_tools import (
+from prompter_kit import (
     LIBRARY_KEY,
     _slugify,
     convert_text_file,
