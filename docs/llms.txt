@@ -17,13 +17,13 @@ PrompterKit wraps the Elgato Camera Hub data format (AppSettings.json + Texts/*.
 
 ## Key files
 
-- [elgato_prompter_tools.py](https://github.com/snapsynapse/elgato-prompter-tools/blob/main/elgato_prompter_tools.py) — CLI and core library
-- [elgato_prompter_tools_gui.py](https://github.com/snapsynapse/elgato-prompter-tools/blob/main/elgato_prompter_tools_gui.py) — Flask web GUI
-- [CHANGELOG.md](https://github.com/snapsynapse/elgato-prompter-tools/blob/main/CHANGELOG.md) — version history
-- [README.md](https://github.com/snapsynapse/elgato-prompter-tools/blob/main/README.md) — setup and usage
+- [elgato_prompter_tools.py](https://github.com/snapsynapse/prompter-kit/blob/main/elgato_prompter_tools.py) — CLI and core library
+- [elgato_prompter_tools_gui.py](https://github.com/snapsynapse/prompter-kit/blob/main/elgato_prompter_tools_gui.py) — Flask web GUI
+- [CHANGELOG.md](https://github.com/snapsynapse/prompter-kit/blob/main/CHANGELOG.md) — version history
+- [README.md](https://github.com/snapsynapse/prompter-kit/blob/main/README.md) — setup and usage
 
 ## Links
 
 - Home: https://prompterkit.app/
-- GitHub: https://github.com/snapsynapse/elgato-prompter-tools
+- GitHub: https://github.com/snapsynapse/prompter-kit
 - Author: https://snapsynapse.com/

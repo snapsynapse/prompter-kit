@@ -1,4 +1,4 @@
-# elgato-prompter-tools
+# PrompterKit
 
 Elgato Camera Hub stores your teleprompter scripts in opaque JSON files with no
 official import or export path. This tool gives you a command line for getting

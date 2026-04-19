@@ -25,4 +25,4 @@ paste error here
 - OS: (macOS / Windows, version)
 - Python version: (`python3 --version`)
 - Camera Hub version:
-- elgato-prompter-tools version or commit:
+- PrompterKit version or commit:

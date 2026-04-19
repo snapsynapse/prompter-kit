@@ -5,8 +5,8 @@
 Python 3.10+ required. No external dependencies for the main module.
 
 ```
-git clone https://github.com/snapsynapse/elgato-prompter-tools.git
-cd elgato-prompter-tools
+git clone https://github.com/snapsynapse/prompter-kit.git
+cd prompter-kit
 pip install pytest
 python3 -m pytest tests/ -v
 ```
