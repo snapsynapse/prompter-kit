@@ -13,12 +13,12 @@ PrompterKit wraps the Elgato Camera Hub data format (AppSettings.json + Texts/*.
 - **CRUD**: delete, rename, and reindex scripts without opening Camera Hub
 - **Camera Hub lifecycle**: stop and start Camera Hub via osascript (macOS) or taskkill (Windows)
 - **Web GUI**: Flask-based local web server with drag-and-drop import, script table, inline rename/delete, per-script export, export-all as zip; auto-opens browser on launch
-- **CLI**: every action available as a subcommand of elgato_prompter_tools.py
+- **CLI**: every action available as a subcommand of prompter_kit.py
 
 ## Key files
 
-- [elgato_prompter_tools.py](https://github.com/snapsynapse/prompter-kit/blob/main/elgato_prompter_tools.py) — CLI and core library
-- [elgato_prompter_tools_gui.py](https://github.com/snapsynapse/prompter-kit/blob/main/elgato_prompter_tools_gui.py) — Flask web GUI
+- [prompter_kit.py](https://github.com/snapsynapse/prompter-kit/blob/main/prompter_kit.py) — CLI and core library
+- [prompter_kit_gui.py](https://github.com/snapsynapse/prompter-kit/blob/main/prompter_kit_gui.py) — Flask web GUI
 - [CHANGELOG.md](https://github.com/snapsynapse/prompter-kit/blob/main/CHANGELOG.md) — version history
 - [README.md](https://github.com/snapsynapse/prompter-kit/blob/main/README.md) — setup and usage
 
