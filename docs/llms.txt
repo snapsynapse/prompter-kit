@@ -1,0 +1,29 @@
+# PrompterKit
+
+> Free, open-source tool for managing Elgato Prompter scripts. Import text files, organize your library, back up everything. Web GUI + CLI. No tech skills required.
+
+PrompterKit wraps the Elgato Camera Hub data format (AppSettings.json + Texts/*.json) with a full management layer that Camera Hub itself does not provide. It is aimed at YouTube creators who use the Elgato Prompter hardware and need a way to import scripts from text files, rename and reorder them, export them back, and back up their entire library.
+
+## Key concepts
+
+- **Import**: reads any .txt or .md file, strips Markdown formatting, converts each line to a Camera Hub chapter, registers the script in AppSettings.json
+- **Export**: writes chapter content back to a plain text file (one chapter per line)
+- **Backup**: archives all registered script JSON files plus AppSettings.json to a timestamped zip
+- **Restore**: extracts a backup zip into the Camera Hub data directory (merge or replace mode)
+- **CRUD**: delete, rename, and reindex scripts without opening Camera Hub
+- **Camera Hub lifecycle**: stop and start Camera Hub via osascript (macOS) or taskkill (Windows)
+- **Web GUI**: Flask-based local web server with drag-and-drop import, script table, inline rename/delete, per-script export, export-all as zip; auto-opens browser on launch
+- **CLI**: every action available as a subcommand of elgato_prompter_tools.py
+
+## Key files
+
+- [elgato_prompter_tools.py](https://github.com/snapsynapse/elgato-prompter-tools/blob/main/elgato_prompter_tools.py) — CLI and core library
+- [elgato_prompter_tools_gui.py](https://github.com/snapsynapse/elgato-prompter-tools/blob/main/elgato_prompter_tools_gui.py) — Flask web GUI
+- [CHANGELOG.md](https://github.com/snapsynapse/elgato-prompter-tools/blob/main/CHANGELOG.md) — version history
+- [README.md](https://github.com/snapsynapse/elgato-prompter-tools/blob/main/README.md) — setup and usage
+
+## Links
+
+- Home: https://prompterkit.app/
+- GitHub: https://github.com/snapsynapse/elgato-prompter-tools
+- Author: https://snapsynapse.com/

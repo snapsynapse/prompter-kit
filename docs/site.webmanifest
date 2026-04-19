@@ -1,0 +1,16 @@
+{
+  "name": "PrompterKit",
+  "short_name": "PrompterKit",
+  "description": "Manage your Elgato Prompter scripts. Import, organize, back up.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#ff5252",
+  "background_color": "#0f1117",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
