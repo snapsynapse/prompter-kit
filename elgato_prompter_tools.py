@@ -1,10 +1,13 @@
 import argparse
+import datetime
 import json
 import os
 import re
+import subprocess
 import sys
 import tempfile
 import uuid
+import zipfile
 
 
 LIBRARY_KEY = "applogic.prompter.libraryList"
@@ -66,6 +69,21 @@ def _slugify(name: str) -> str:
     """Convert a friendly name to a safe filename stem."""
     slug = re.sub(r"[^\w\s-]", "", name).strip()
     return re.sub(r"[\s]+", "_", slug) or "script"
+
+
+def _resolve_script(name_or_guid: str, base_dir: str | None = None) -> dict:
+    """Find a registered script by exact GUID or case-insensitive friendly name."""
+    scripts = list_scripts(base_dir)
+    for s in scripts:
+        if s["guid"] == name_or_guid:
+            return s
+    matches = [s for s in scripts if s["friendlyName"].lower() == name_or_guid.lower()]
+    if not matches:
+        raise KeyError(f"No script found matching '{name_or_guid}'")
+    if len(matches) > 1:
+        guids = ", ".join(s["guid"] for s in matches)
+        raise KeyError(f"Multiple scripts named '{name_or_guid}': {guids}. Use GUID to disambiguate.")
+    return matches[0]
 
 
 # ---------------------------------------------------------------------------
@@ -301,6 +319,298 @@ def export_all(output_dir: str, base_dir: str | None = None) -> list[tuple[str, 
 
 
 # ---------------------------------------------------------------------------
+# Delete pipeline
+# ---------------------------------------------------------------------------
+
+def delete_script(name_or_guid: str, base_dir: str | None = None) -> str:
+    """
+    Remove a script by name or GUID. Deletes the Texts JSON and unregisters from
+    AppSettings.json. Returns the GUID that was deleted.
+    """
+    if base_dir is None:
+        base_dir = get_camerahub_path()
+
+    script = _resolve_script(name_or_guid, base_dir)
+    guid = script["guid"]
+
+    settings_path = os.path.join(base_dir, "AppSettings.json")
+    settings = _load_appsettings(base_dir)
+    lib = settings.get(LIBRARY_KEY, [])
+    if isinstance(lib, list) and guid in lib:
+        lib.remove(guid)
+        settings[LIBRARY_KEY] = lib
+        _atomic_write_json(settings_path, settings)
+
+    json_path = os.path.join(base_dir, "Texts", f"{guid}.json")
+    if os.path.exists(json_path):
+        try:
+            os.unlink(json_path)
+        except OSError as e:
+            raise OSError(f"Could not delete '{json_path}': {e}") from e
+
+    return guid
+
+
+# ---------------------------------------------------------------------------
+# Rename pipeline
+# ---------------------------------------------------------------------------
+
+def rename_script(name_or_guid: str, new_name: str, base_dir: str | None = None) -> str:
+    """
+    Update the friendlyName of an existing script. Returns the GUID.
+    """
+    if not new_name or not new_name.strip():
+        raise ValueError("new_name must not be empty")
+    if base_dir is None:
+        base_dir = get_camerahub_path()
+
+    script = _resolve_script(name_or_guid, base_dir)
+    guid = script["guid"]
+
+    data = load_script_json(guid, base_dir)
+    data["friendlyName"] = new_name.strip()
+    json_path = os.path.join(base_dir, "Texts", f"{guid}.json")
+    _atomic_write_json(json_path, data)
+
+    return guid
+
+
+# ---------------------------------------------------------------------------
+# Reindex pipeline
+# ---------------------------------------------------------------------------
+
+def reindex_scripts(ordered_names_or_guids: list[str] | None = None, base_dir: str | None = None) -> list[dict]:
+    """
+    Assign new 0-based index values across the script library.
+
+    If ordered_names_or_guids is provided, those scripts are placed first (in that order)
+    with indices 0, 1, 2 ... Any scripts not listed retain their relative order and are
+    appended after with the next available indices.
+
+    If ordered_names_or_guids is None or empty, the current sort order (by index, then name)
+    is normalized to 0, 1, 2 ...
+
+    Returns the updated list of script metadata dicts (same shape as list_scripts).
+    """
+    if base_dir is None:
+        base_dir = get_camerahub_path()
+
+    scripts = list_scripts(base_dir)
+    if not scripts:
+        return []
+
+    if ordered_names_or_guids:
+        # Resolve the explicitly ordered scripts first
+        resolved_guids: list[str] = []
+        for spec in ordered_names_or_guids:
+            s = _resolve_script(spec, base_dir)
+            if s["guid"] not in resolved_guids:
+                resolved_guids.append(s["guid"])
+
+        ordered = [s for s in scripts if s["guid"] in resolved_guids]
+        ordered.sort(key=lambda s: resolved_guids.index(s["guid"]))
+        remainder = [s for s in scripts if s["guid"] not in resolved_guids]
+        final_order = ordered + remainder
+    else:
+        final_order = scripts  # already sorted by (index, name)
+
+    for new_index, script in enumerate(final_order):
+        if script["missing"]:
+            continue
+        data = load_script_json(script["guid"], base_dir)
+        if data.get("index") != new_index:
+            data["index"] = new_index
+            json_path = os.path.join(base_dir, "Texts", f"{script['guid']}.json")
+            _atomic_write_json(json_path, data)
+
+    return list_scripts(base_dir)
+
+
+# ---------------------------------------------------------------------------
+# Edit pipeline
+# ---------------------------------------------------------------------------
+
+def edit_script(name_or_guid: str, base_dir: str | None = None) -> str:
+    """
+    Open a script's chapters in $EDITOR (one chapter per line).
+    Saves the updated chapters back to the script JSON on exit.
+    Returns the GUID edited.
+    """
+    if base_dir is None:
+        base_dir = get_camerahub_path()
+
+    script = _resolve_script(name_or_guid, base_dir)
+    guid = script["guid"]
+    data = load_script_json(guid, base_dir)
+    chapters = data.get("chapters", [])
+
+    if sys.platform == "win32":
+        default_editor = "notepad"
+    else:
+        default_editor = "vi"
+    editor = os.environ.get("EDITOR") or os.environ.get("VISUAL") or default_editor
+
+    fd, tmp_path = tempfile.mkstemp(suffix=".txt")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write("\n".join(chapters) + ("\n" if chapters else ""))
+
+        result = subprocess.run([editor, tmp_path])
+        if result.returncode != 0:
+            raise RuntimeError(f"Editor exited with code {result.returncode}")
+
+        with open(tmp_path, "r", encoding="utf-8") as f:
+            raw_lines = f.readlines()
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+    new_chapters = [line.rstrip("\n\r") for line in raw_lines if line.strip()]
+    if not new_chapters:
+        raise ValueError("Editor produced no content; script not updated")
+
+    data["chapters"] = new_chapters
+    json_path = os.path.join(base_dir, "Texts", f"{guid}.json")
+    _atomic_write_json(json_path, data)
+
+    return guid
+
+
+# ---------------------------------------------------------------------------
+# Backup / restore pipeline
+# ---------------------------------------------------------------------------
+
+def backup(output_path: str | None = None, base_dir: str | None = None) -> str:
+    """
+    Archive all registered scripts and AppSettings.json to a zip file.
+    If output_path is None, writes to the current directory with a timestamped name.
+    Returns the path of the created archive.
+    """
+    if base_dir is None:
+        base_dir = get_camerahub_path()
+
+    if output_path is None:
+        stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = f"prompter_backup_{stamp}.zip"
+
+    scripts = list_scripts(base_dir)
+    settings_path = os.path.join(base_dir, "AppSettings.json")
+
+    with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        if os.path.exists(settings_path):
+            zf.write(settings_path, "AppSettings.json")
+
+        for script in scripts:
+            if script["missing"]:
+                continue
+            arc_name = os.path.join("Texts", f"{script['guid']}.json")
+            zf.write(script["path"], arc_name)
+
+    return output_path
+
+
+def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) -> int:
+    """
+    Restore scripts from a backup zip.
+
+    merge=False (default): replace AppSettings.json and all Texts JSON files from the archive.
+    merge=True: add scripts from the archive that are not already registered, leaving
+                existing scripts untouched.
+
+    Returns the count of scripts written.
+    """
+    if base_dir is None:
+        base_dir = get_camerahub_path()
+
+    if not os.path.isfile(backup_path):
+        raise FileNotFoundError(f"Backup file not found: '{backup_path}'")
+
+    texts_dir = os.path.join(base_dir, "Texts")
+    os.makedirs(texts_dir, exist_ok=True)
+    settings_path = os.path.join(base_dir, "AppSettings.json")
+
+    with zipfile.ZipFile(backup_path, "r") as zf:
+        names = zf.namelist()
+
+        if merge:
+            current_settings = _load_appsettings(base_dir)
+            current_guids: list[str] = current_settings.get(LIBRARY_KEY, [])
+            if not isinstance(current_guids, list):
+                current_guids = []
+
+            # Read backup AppSettings to get its GUID list
+            if "AppSettings.json" in names:
+                backup_settings = json.loads(zf.read("AppSettings.json"))
+                backup_guids: list[str] = backup_settings.get(LIBRARY_KEY, [])
+                if not isinstance(backup_guids, list):
+                    backup_guids = []
+            else:
+                backup_guids = []
+
+            written = 0
+            for guid in backup_guids:
+                arc_name = f"Texts/{guid}.json"
+                if arc_name not in names:
+                    continue
+                dest = os.path.join(texts_dir, f"{guid}.json")
+                with zf.open(arc_name) as src, open(dest, "wb") as dst:
+                    dst.write(src.read())
+                if guid not in current_guids:
+                    current_guids.append(guid)
+                written += 1
+
+            current_settings[LIBRARY_KEY] = current_guids
+            _atomic_write_json(settings_path, current_settings)
+            return written
+
+        else:
+            # Replace mode: extract everything from the archive
+            written = 0
+            if "AppSettings.json" in names:
+                zf.extract("AppSettings.json", base_dir)
+
+            for name in names:
+                if name.startswith("Texts/") and name.endswith(".json"):
+                    zf.extract(name, base_dir)
+                    written += 1
+
+            return written
+
+
+# ---------------------------------------------------------------------------
+# Camera Hub lifecycle
+# ---------------------------------------------------------------------------
+
+_CAMERAHUB_APP_NAME = "Camera Hub"
+_CAMERAHUB_WIN_EXE = "CameraHub.exe"
+
+
+def camerahub_stop() -> None:
+    """Quit Camera Hub gracefully."""
+    if sys.platform == "darwin":
+        subprocess.run(
+            ["osascript", "-e", f'tell application "{_CAMERAHUB_APP_NAME}" to quit'],
+            check=False,
+        )
+    elif sys.platform == "win32":
+        subprocess.run(["taskkill", "/IM", _CAMERAHUB_WIN_EXE, "/F"], check=False)
+    else:
+        raise EnvironmentError(f"camerahub stop not supported on {sys.platform}")
+
+
+def camerahub_start() -> None:
+    """Launch Camera Hub."""
+    if sys.platform == "darwin":
+        subprocess.run(["open", "-a", _CAMERAHUB_APP_NAME], check=True)
+    elif sys.platform == "win32":
+        subprocess.run(["start", "", _CAMERAHUB_WIN_EXE], shell=True, check=True)
+    else:
+        raise EnvironmentError(f"camerahub start not supported on {sys.platform}")
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -311,6 +621,11 @@ def _cmd_import(args: argparse.Namespace) -> None:
     if not args.name.strip():
         print("Error: --name must not be empty.", file=sys.stderr)
         sys.exit(1)
+
+    if getattr(args, "restart", False):
+        print("Stopping Camera Hub...")
+        camerahub_stop()
+
     try:
         script_path, settings_path = import_script(args.text_file, args.name.strip(), args.index)
         print(f"Script saved:  {script_path}")
@@ -318,6 +633,10 @@ def _cmd_import(args: argparse.Namespace) -> None:
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
+
+    if getattr(args, "restart", False):
+        print("Starting Camera Hub...")
+        camerahub_start()
 
 
 def _cmd_export(args: argparse.Namespace) -> None:
@@ -386,6 +705,81 @@ def _cmd_export(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
+def _cmd_delete(args: argparse.Namespace) -> None:
+    try:
+        guid = delete_script(args.name_or_guid)
+        print(f"Deleted: {guid}")
+    except (KeyError, OSError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def _cmd_rename(args: argparse.Namespace) -> None:
+    try:
+        guid = rename_script(args.name_or_guid, args.new_name)
+        print(f"Renamed: {guid}  ->  {args.new_name}")
+    except (KeyError, ValueError, OSError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def _cmd_reindex(args: argparse.Namespace) -> None:
+    specs = args.name_or_guid or None
+    try:
+        updated = reindex_scripts(specs)
+    except (KeyError, OSError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    print(f"{'Index':<6} {'Name':<40} {'GUID'}")
+    print("-" * 90)
+    for s in updated:
+        print(f"{s['index']:<6} {s['friendlyName']:<40} {s['guid']}")
+
+
+def _cmd_edit(args: argparse.Namespace) -> None:
+    try:
+        guid = edit_script(args.name_or_guid)
+        print(f"Saved: {guid}")
+    except (KeyError, ValueError, RuntimeError, OSError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def _cmd_backup(args: argparse.Namespace) -> None:
+    try:
+        path = backup(args.output)
+        print(f"Backup written: {path}")
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def _cmd_restore(args: argparse.Namespace) -> None:
+    try:
+        count = restore(args.backup_file, merge=args.merge)
+        mode = "merged" if args.merge else "restored"
+        print(f"{count} script(s) {mode} from '{args.backup_file}'")
+    except (FileNotFoundError, OSError, ValueError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def _cmd_camerahub(args: argparse.Namespace) -> None:
+    try:
+        if args.action == "stop":
+            camerahub_stop()
+            print("Camera Hub stopped.")
+        elif args.action == "start":
+            camerahub_start()
+            print("Camera Hub started.")
+    except EnvironmentError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Import/export scripts for Elgato Prompter (Camera Hub)."
@@ -397,6 +791,7 @@ def main() -> None:
     p_import.add_argument("text_file", help="Path to the .txt script file")
     p_import.add_argument("--name", required=True, help="Friendly name for the script")
     p_import.add_argument("--index", type=int, default=0, help="Order index (default: 0)")
+    p_import.add_argument("--restart", action="store_true", help="Stop Camera Hub before import and restart after")
 
     # export subcommand
     p_export = sub.add_parser("export", help="Export Prompter script(s) to .txt files")
@@ -406,12 +801,54 @@ def main() -> None:
     p_export.add_argument("--all", action="store_true", help="Export all registered scripts")
     p_export.add_argument("--list", action="store_true", help="List all registered scripts")
 
+    # delete subcommand
+    p_delete = sub.add_parser("delete", help="Remove a script by name or GUID")
+    p_delete.add_argument("name_or_guid", help="Script friendly name or GUID")
+
+    # rename subcommand
+    p_rename = sub.add_parser("rename", help="Rename an existing script")
+    p_rename.add_argument("name_or_guid", help="Current friendly name or GUID")
+    p_rename.add_argument("new_name", help="New friendly name")
+
+    # reindex subcommand
+    p_reindex = sub.add_parser("reindex", help="Reorder the script library by assigning new index values")
+    p_reindex.add_argument(
+        "name_or_guid",
+        nargs="*",
+        help="Scripts in desired order (by name or GUID). Omit to normalize existing order.",
+    )
+
+    # edit subcommand
+    p_edit = sub.add_parser("edit", help="Open a script's chapters in $EDITOR")
+    p_edit.add_argument("name_or_guid", help="Script friendly name or GUID")
+
+    # backup subcommand
+    p_backup = sub.add_parser("backup", help="Export all scripts to a timestamped zip archive")
+    p_backup.add_argument("--output", help="Output zip path (default: prompter_backup_TIMESTAMP.zip)")
+
+    # restore subcommand
+    p_restore = sub.add_parser("restore", help="Restore scripts from a backup zip")
+    p_restore.add_argument("backup_file", help="Path to the backup zip")
+    p_restore.add_argument("--merge", action="store_true", help="Add new scripts without replacing existing ones")
+
+    # camerahub subcommand
+    p_camerahub = sub.add_parser("camerahub", help="Control the Camera Hub application lifecycle")
+    p_camerahub.add_argument("action", choices=["stop", "start"], help="stop or start Camera Hub")
+
     args = parser.parse_args()
 
-    if args.command == "import":
-        _cmd_import(args)
-    elif args.command == "export":
-        _cmd_export(args)
+    dispatch = {
+        "import": _cmd_import,
+        "export": _cmd_export,
+        "delete": _cmd_delete,
+        "rename": _cmd_rename,
+        "reindex": _cmd_reindex,
+        "edit": _cmd_edit,
+        "backup": _cmd_backup,
+        "restore": _cmd_restore,
+        "camerahub": _cmd_camerahub,
+    }
+    dispatch[args.command](args)
 
 
 if __name__ == "__main__":

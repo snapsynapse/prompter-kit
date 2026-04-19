@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found &mdash; PrompterKit</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#ff5252">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://prompterkit.app/">
+  <style>
+    :root {
+      --accent: #ff5252;
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --text: #e1e4ed;
+      --muted: #8b90a0;
+      --border: rgba(255,255,255,.08);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      text-align: center;
+    }
+    .logo-wrap { margin-bottom: 2rem; opacity: .5; }
+    .code {
+      font-size: clamp(4rem, 20vw, 8rem);
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent);
+      letter-spacing: -.04em;
+      margin-bottom: 1rem;
+    }
+    h1 { font-size: 1.25rem; font-weight: 600; margin-bottom: .5rem; }
+    p { color: var(--muted); font-size: .95rem; max-width: 34ch; margin: 0 auto 2rem; }
+    a.home {
+      display: inline-block;
+      padding: .65rem 1.5rem;
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: .9rem;
+      text-decoration: none;
+    }
+    a.home:hover { opacity: .85; }
+  </style>
+</head>
+<body>
+  <div class="logo-wrap">
+    <svg width="40" height="40" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <rect x="2" y="4" width="28" height="22" rx="3" stroke="#ff5252" stroke-width="2.5"/>
+      <line x1="7" y1="11" x2="25" y2="11" stroke="#ff5252" stroke-width="2" stroke-linecap="round"/>
+      <line x1="7" y1="16" x2="25" y2="16" stroke="#ff5252" stroke-width="2" stroke-linecap="round"/>
+      <line x1="7" y1="21" x2="18" y2="21" stroke="#ff5252" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="code" aria-hidden="true">404</div>
+  <h1>Page not found</h1>
+  <p>This script seems to be missing from the library.</p>
+  <a class="home" href="https://prompterkit.app/">Back to PrompterKit</a>
+</body>
+</html>

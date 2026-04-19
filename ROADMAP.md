@@ -11,27 +11,27 @@
 
 Common pain points confirmed across user forums and competing tools. Small-effort, high-value.
 
-- [ ] `delete` command: remove a script by name or GUID from Texts/ and AppSettings.json
-- [ ] `rename` command: update friendlyName in an existing script JSON
-- [ ] `reindex` command: bulk-set index values to reorder the full script library
-- [ ] `edit` command: open an existing script's chapters in `$EDITOR`
+- [x] `delete` command: remove a script by name or GUID from Texts/ and AppSettings.json
+- [x] `rename` command: update friendlyName in an existing script JSON
+- [x] `reindex` command: bulk-set index values to reorder the full script library
+- [x] `edit` command: open an existing script's chapters in `$EDITOR`
 
 ## CLI -- backup and restore
 
 No native backup path exists in Camera Hub. Users have no way to recover scripts after
 a reinstall or migration without this tool.
 
-- [ ] `backup` command: export all scripts + AppSettings.json to a timestamped zip archive
-- [ ] `restore` command: import from a backup zip, merging or replacing the library
+- [x] `backup` command: export all scripts + AppSettings.json to a timestamped zip archive
+- [x] `restore` command: import from a backup zip, merging or replacing the library
 
 ## CLI -- Camera Hub lifecycle
 
 Every import and export requires the user to manually quit Camera Hub first. A wrapper
 that handles this automatically removes the most common friction point.
 
-- [ ] `camerahub stop`: quit Camera Hub gracefully (macOS: `osascript`; Windows: `taskkill`)
-- [ ] `camerahub start`: relaunch Camera Hub
-- [ ] `--restart` flag on `import`: auto-stop before write, auto-start after
+- [x] `camerahub stop`: quit Camera Hub gracefully (macOS: `osascript`; Windows: `taskkill`)
+- [x] `camerahub start`: relaunch Camera Hub
+- [x] `--restart` flag on `import`: auto-stop before write, auto-start after
 
 ## CLI -- LLM script generation
 
@@ -55,14 +55,14 @@ is an independent tool solving overlapping problems. Evaluate before duplicating
 A local web server opened in the browser. No installation beyond Python + Flask.
 Single command: `python3 elgato_prompter_tools_gui.py`
 
-- [ ] Flask routes wrapping existing import/export/list functions
-- [ ] Script list table with GUID, friendly name, index
-- [ ] Import form with drag-and-drop file input and name/index fields
-- [ ] Single-script export by name or GUID
-- [ ] Export-all to a chosen directory
-- [ ] Delete and rename from UI
-- [ ] Status and error feedback in UI
-- [ ] Auto-open browser on launch
+- [x] Flask routes wrapping existing import/export/list functions
+- [x] Script list table with GUID, friendly name, index
+- [x] Import form with drag-and-drop file input and name/index fields
+- [x] Single-script export by name or GUID
+- [x] Export-all to a chosen directory (served as zip download)
+- [x] Delete and rename from UI
+- [x] Status and error feedback in UI
+- [x] Auto-open browser on launch
 
 ## GUI -- double-click app (longer term)
 
