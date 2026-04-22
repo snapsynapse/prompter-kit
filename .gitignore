@@ -5,3 +5,13 @@ __pycache__/
 dist/
 build/
 .claude/worktrees/
+
+# --- baseline additions (automated audit 2026-04-21) ---
+.DS_Store
+.env
+.env.*
+node_modules/
+.vscode/
+.idea/
+.venv/
+venv/
