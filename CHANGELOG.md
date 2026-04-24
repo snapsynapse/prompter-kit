@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-23
+
+### Changed
+- `restore` now validates backup zips before writing: checks for missing or
+  malformed `AppSettings.json`, duplicate archive paths, GUID format (alphanumeric
+  plus `.`, `_`, `-` only), unexpected files, and GUID cross-checks between
+  metadata and script JSON. Replace mode also cleans `Texts/` atomically.
+- Export filename collision logic extracted into `_unique_text_filename` helper,
+  shared between the CLI `export --all` path and the GUI zip-export path.
+- 8 new tests (79 total).
+
 ## [0.3.0] - 2026-04-19
 
 ### Added

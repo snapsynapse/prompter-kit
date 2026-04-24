@@ -101,8 +101,10 @@ images, inline code, blockquotes, list bullets, and strikethrough are stripped.
   interrupted write cannot corrupt `AppSettings.json`.
 - Rollback: if updating `AppSettings.json` fails after writing a new script
   JSON, the script JSON is removed.
-- Validation: `restore` rejects zips missing `AppSettings.json` or with
-  unexpected paths.
+- Restore validation: before writing anything, `restore` checks that the zip
+  contains a valid `AppSettings.json`, that every GUID matches `[A-Za-z0-9._-]+`,
+  that no unexpected paths are present, and that each script's embedded GUID
+  matches the filename. Replace mode clears `Texts/` atomically before writing.
 
 ## Data locations
 
@@ -117,8 +119,8 @@ images, inline code, blockquotes, list bullets, and strikethrough are stripped.
 python3 -m pytest tests/ -v
 ```
 
-71 tests cover import, export, CRUD, backup/restore, Markdown stripping,
-and atomic-write rollback.
+79 tests cover import, export, CRUD, backup/restore, Markdown stripping,
+atomic-write rollback, and restore validation.
 
 ## Contributing
 
