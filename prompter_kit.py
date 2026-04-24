@@ -71,6 +71,27 @@ def _slugify(name: str) -> str:
     return re.sub(r"[\s]+", "_", slug) or "script"
 
 
+_SAFE_GUID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
+def _validate_backup_guid(guid: str) -> str:
+    """Validate a GUID read from backup metadata before using it as a filename."""
+    if not isinstance(guid, str) or not guid or not _SAFE_GUID_RE.fullmatch(guid):
+        raise ValueError(f"Backup contains invalid script GUID: {guid!r}")
+    return guid
+
+
+def _unique_text_filename(name: str, guid: str, used_names: set[str] | None = None) -> str:
+    """Return a collision-safe export filename for a script."""
+    slug = _slugify(name) or guid
+    filename = f"{slug}.txt"
+    if used_names is not None:
+        if filename in used_names:
+            filename = f"{slug}_{guid[:8]}.txt"
+        used_names.add(filename)
+    return filename
+
+
 def _resolve_script(name_or_guid: str, base_dir: str | None = None) -> dict:
     """Find a registered script by exact GUID or case-insensitive friendly name."""
     scripts = list_scripts(base_dir)
@@ -296,18 +317,15 @@ def export_all(output_dir: str, base_dir: str | None = None) -> list[tuple[str, 
 
     os.makedirs(output_dir, exist_ok=True)
     exported = []
+    used_names: set[str] = set()
 
     for script in scripts:
         if script["missing"]:
             print(f"Warning: skipping '{script['guid']}' (file missing or corrupt)", file=sys.stderr)
             continue
 
-        slug = _slugify(script["friendlyName"]) or script["guid"]
-        output_path = os.path.join(output_dir, f"{slug}.txt")
-
-        # Avoid silently overwriting if two scripts share a friendly name
-        if os.path.exists(output_path):
-            output_path = os.path.join(output_dir, f"{slug}_{script['guid'][:8]}.txt")
+        output_name = _unique_text_filename(script["friendlyName"], script["guid"], used_names)
+        output_path = os.path.join(output_dir, output_name)
 
         try:
             export_script(script["guid"], output_path, base_dir)
@@ -533,50 +551,85 @@ def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) 
 
     with zipfile.ZipFile(backup_path, "r") as zf:
         names = zf.namelist()
+        if "AppSettings.json" not in names:
+            raise ValueError("Backup is missing AppSettings.json")
+        if len(names) != len(set(names)):
+            raise ValueError("Backup contains duplicate archive paths")
 
-        if merge:
-            current_settings = _load_appsettings(base_dir)
-            current_guids: list[str] = current_settings.get(LIBRARY_KEY, [])
-            if not isinstance(current_guids, list):
-                current_guids = []
+        try:
+            backup_settings = json.loads(zf.read("AppSettings.json"))
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Backup AppSettings.json is not valid JSON: {e}") from e
 
-            # Read backup AppSettings to get its GUID list
-            if "AppSettings.json" in names:
-                backup_settings = json.loads(zf.read("AppSettings.json"))
-                backup_guids: list[str] = backup_settings.get(LIBRARY_KEY, [])
-                if not isinstance(backup_guids, list):
-                    backup_guids = []
-            else:
-                backup_guids = []
+        backup_guids = backup_settings.get(LIBRARY_KEY, [])
+        if not isinstance(backup_guids, list):
+            raise ValueError(f"Backup AppSettings.json key '{LIBRARY_KEY}' must be a list")
 
-            written = 0
-            for guid in backup_guids:
-                arc_name = f"Texts/{guid}.json"
-                if arc_name not in names:
-                    continue
-                dest = os.path.join(texts_dir, f"{guid}.json")
-                with zf.open(arc_name) as src, open(dest, "wb") as dst:
-                    dst.write(src.read())
-                if guid not in current_guids:
-                    current_guids.append(guid)
-                written += 1
+        validated_guids: list[str] = []
+        seen_guids: set[str] = set()
+        for guid in backup_guids:
+            safe_guid = _validate_backup_guid(guid)
+            if safe_guid not in seen_guids:
+                validated_guids.append(safe_guid)
+                seen_guids.add(safe_guid)
 
-            current_settings[LIBRARY_KEY] = current_guids
-            _atomic_write_json(settings_path, current_settings)
-            return written
+        expected_entries = {"AppSettings.json"} | {f"Texts/{guid}.json" for guid in validated_guids}
+        unexpected_entries = [name for name in names if name not in expected_entries]
+        if unexpected_entries:
+            raise ValueError(f"Backup contains unexpected paths: {', '.join(sorted(unexpected_entries))}")
 
-        else:
-            # Replace mode: extract everything from the archive
-            written = 0
-            if "AppSettings.json" in names:
-                zf.extract("AppSettings.json", base_dir)
+        backup_scripts: dict[str, dict] = {}
+        for guid in validated_guids:
+            arc_name = f"Texts/{guid}.json"
+            if arc_name not in names:
+                continue
+            try:
+                script_data = json.loads(zf.read(arc_name))
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Backup script '{guid}' is not valid JSON: {e}") from e
+            if not isinstance(script_data, dict):
+                raise ValueError(f"Backup script '{guid}' must be a JSON object")
+            if script_data.get("GUID") not in ("", None, guid):
+                raise ValueError(f"Backup script '{guid}' has mismatched GUID metadata")
+            script_data["GUID"] = guid
+            backup_scripts[guid] = script_data
 
-            for name in names:
-                if name.startswith("Texts/") and name.endswith(".json"):
-                    zf.extract(name, base_dir)
-                    written += 1
+    if merge:
+        current_settings = _load_appsettings(base_dir)
+        current_guids = current_settings.get(LIBRARY_KEY, [])
+        if not isinstance(current_guids, list):
+            current_guids = []
 
-            return written
+        written = 0
+        for guid in validated_guids:
+            if guid in current_guids:
+                continue
+            if guid not in backup_scripts:
+                continue
+            dest = os.path.join(texts_dir, f"{guid}.json")
+            _atomic_write_json(dest, backup_scripts[guid])
+            current_guids.append(guid)
+            written += 1
+
+        current_settings[LIBRARY_KEY] = current_guids
+        _atomic_write_json(settings_path, current_settings)
+        return written
+
+    written = 0
+    for name in os.listdir(texts_dir):
+        if name.endswith(".json"):
+            os.unlink(os.path.join(texts_dir, name))
+
+    for guid in validated_guids:
+        if guid not in backup_scripts:
+            continue
+        dest = os.path.join(texts_dir, f"{guid}.json")
+        _atomic_write_json(dest, backup_scripts[guid])
+        written += 1
+
+    backup_settings[LIBRARY_KEY] = validated_guids
+    _atomic_write_json(settings_path, backup_settings)
+    return written
 
 
 # ---------------------------------------------------------------------------

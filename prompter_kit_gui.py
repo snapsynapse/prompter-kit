@@ -21,8 +21,8 @@ from flask import (
 )
 
 from prompter_kit import (
+    _unique_text_filename,
     delete_script,
-    export_script,
     import_script,
     list_scripts,
     load_script_json,
@@ -377,6 +377,7 @@ def do_export_all():
     try:
         scripts = list_scripts()
         buf = io.BytesIO()
+        used_names: set[str] = set()
         with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
             for s in scripts:
                 if s["missing"]:
@@ -386,9 +387,7 @@ def do_export_all():
                 if not chapters:
                     continue
                 content = "\n".join(chapters) + "\n"
-                safe = "".join(c if c.isalnum() or c in "-_ " else "_"
-                               for c in s["friendlyName"]).strip() or s["guid"]
-                arc_name = f"{safe}.txt"
+                arc_name = _unique_text_filename(s["friendlyName"], s["guid"], used_names)
                 zf.writestr(arc_name, content.encode("utf-8"))
         buf.seek(0)
         return send_file(

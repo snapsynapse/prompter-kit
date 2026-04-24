@@ -286,7 +286,7 @@ def test_restore_merge_adds_new_only(tmp_path):
     _setup(dst, [("G1", "Alpha", ["existing"], 0)])
 
     count = restore(archive, merge=True, base_dir=str(dst))
-    assert count == 2  # both written to disk; only G2 added to library
+    assert count == 1
 
     scripts = list_scripts(base_dir=str(dst))
     guids = {s["guid"] for s in scripts}
@@ -307,9 +307,78 @@ def test_restore_merge_preserves_existing_content(tmp_path):
     _setup(dst, [("G1", "Alpha", ["existing content"], 0)])
     restore(archive, merge=True, base_dir=str(dst))
 
-    # In merge mode the file is overwritten from archive but GUID stays registered once
-    scripts = list_scripts(base_dir=str(dst))
-    assert scripts[0][LIBRARY_KEY if False else "guid"] == "G1"  # still registered
+    data = load_script_json("G1", base_dir=str(dst))
+    assert data["chapters"] == ["existing content"]
+
+
+def test_restore_replace_removes_stale_json_files(tmp_path):
+    src = tmp_path / "src"
+    dst = tmp_path / "dst"
+    src.mkdir()
+    dst.mkdir()
+
+    _setup(src, [("G1", "Alpha", ["from backup"], 0)])
+    archive = str(tmp_path / "backup.zip")
+    backup(archive, base_dir=str(src))
+
+    _setup(dst, [
+        ("G1", "Alpha", ["existing"], 0),
+        ("STALE", "Stale", ["leftover"], 1),
+    ])
+
+    restore(archive, merge=False, base_dir=str(dst))
+    assert not (dst / "Texts" / "STALE.json").exists()
+
+
+def test_restore_missing_appsettings_rejected(tmp_path):
+    archive = tmp_path / "backup.zip"
+    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("Texts/G1.json", json.dumps({"GUID": "G1", "friendlyName": "Alpha", "chapters": ["x"], "index": 0}))
+
+    with pytest.raises(ValueError, match="missing AppSettings"):
+        restore(str(archive), base_dir=str(tmp_path / "dst"))
+
+
+def test_restore_rejects_unexpected_paths(tmp_path):
+    archive = tmp_path / "backup.zip"
+    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("AppSettings.json", json.dumps({LIBRARY_KEY: ["G1"]}))
+        zf.writestr("Texts/G1.json", json.dumps({"GUID": "G1", "friendlyName": "Alpha", "chapters": ["x"], "index": 0}))
+        zf.writestr("../escape.txt", "nope")
+
+    with pytest.raises(ValueError, match="unexpected paths"):
+        restore(str(archive), base_dir=str(tmp_path / "dst"))
+
+
+def test_restore_rejects_duplicate_archive_paths(tmp_path):
+    archive = tmp_path / "backup.zip"
+    with pytest.warns(UserWarning, match="Duplicate name"):
+        with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("AppSettings.json", json.dumps({LIBRARY_KEY: ["G1"]}))
+            zf.writestr("Texts/G1.json", json.dumps({"GUID": "G1", "friendlyName": "Alpha", "chapters": ["first"], "index": 0}))
+            zf.writestr("Texts/G1.json", json.dumps({"GUID": "G1", "friendlyName": "Alpha", "chapters": ["second"], "index": 0}))
+
+    with pytest.raises(ValueError, match="duplicate archive paths"):
+        restore(str(archive), base_dir=str(tmp_path / "dst"))
+
+
+def test_restore_rejects_invalid_guid_in_backup_metadata(tmp_path):
+    archive = tmp_path / "backup.zip"
+    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("AppSettings.json", json.dumps({LIBRARY_KEY: ["../escape"]}))
+
+    with pytest.raises(ValueError, match="invalid script GUID"):
+        restore(str(archive), base_dir=str(tmp_path / "dst"))
+
+
+def test_restore_rejects_mismatched_script_guid(tmp_path):
+    archive = tmp_path / "backup.zip"
+    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("AppSettings.json", json.dumps({LIBRARY_KEY: ["G1"]}))
+        zf.writestr("Texts/G1.json", json.dumps({"GUID": "OTHER", "friendlyName": "Alpha", "chapters": ["x"], "index": 0}))
+
+    with pytest.raises(ValueError, match="mismatched GUID"):
+        restore(str(archive), base_dir=str(tmp_path / "dst"))
 
 
 def test_restore_missing_file_raises(tmp_path):
