@@ -18,17 +18,30 @@ LIBRARY_KEY = "applogic.prompter.libraryList"
 # ---------------------------------------------------------------------------
 
 def get_camerahub_path() -> str:
-    """Return the platform-appropriate CameraHub data directory."""
+    """Return the platform-appropriate Camera Hub data directory.
+
+    Recent Camera Hub builds use "Camera Hub" (with a space); older builds
+    used "CameraHub". Prefer the spaced name, but fall back to the legacy
+    name when only it exists on disk.
+    """
     if sys.platform == "win32":
         appdata = os.environ.get("APPDATA", "")
         if not appdata:
             raise EnvironmentError("APPDATA environment variable is not set")
-        return os.path.join(appdata, "Elgato", "CameraHub")
+        elgato = os.path.join(appdata, "Elgato")
     elif sys.platform == "darwin":
         home = os.path.expanduser("~")
-        return os.path.join(home, "Library", "Application Support", "Elgato", "CameraHub")
+        elgato = os.path.join(home, "Library", "Application Support", "Elgato")
     else:
         raise EnvironmentError(f"Unsupported platform: {sys.platform}")
+
+    spaced = os.path.join(elgato, "Camera Hub")
+    legacy = os.path.join(elgato, "CameraHub")
+    if os.path.isdir(spaced):
+        return spaced
+    if os.path.isdir(legacy):
+        return legacy
+    return spaced
 
 
 # ---------------------------------------------------------------------------
