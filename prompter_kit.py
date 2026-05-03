@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import uuid
 import zipfile
 
@@ -107,6 +108,57 @@ def _resolve_script(name_or_guid: str, base_dir: str | None = None) -> dict:
     return matches[0]
 
 
+def _resolve_base_dir(base_dir: str | None = None) -> str:
+    return base_dir if base_dir is not None else get_camerahub_path()
+
+
+def _script_json_path(guid_str: str, base_dir: str) -> str:
+    return os.path.join(base_dir, "Texts", f"{guid_str}.json")
+
+
+def verify_script_registered(
+    guid_str: str,
+    expected_name: str | None = None,
+    expected_chapters: list[str] | None = None,
+    expected_index: int | None = None,
+    base_dir: str | None = None,
+) -> None:
+    """Raise if a script write is not visible in AppSettings.json and Texts."""
+    base_dir = _resolve_base_dir(base_dir)
+    settings = _load_appsettings(base_dir)
+    guids = settings.get(LIBRARY_KEY, [])
+    if not isinstance(guids, list):
+        raise RuntimeError(f"AppSettings.json key '{LIBRARY_KEY}' is not a list")
+    if guid_str not in guids:
+        raise RuntimeError(f"Verification failed: '{guid_str}' is not registered in AppSettings.json")
+
+    data = load_script_json(guid_str, base_dir)
+    if data.get("GUID") not in ("", None, guid_str):
+        raise RuntimeError(f"Verification failed: '{guid_str}' has mismatched GUID metadata")
+    if expected_name is not None and data.get("friendlyName") != expected_name:
+        raise RuntimeError(
+            f"Verification failed: '{guid_str}' name is {data.get('friendlyName')!r}, expected {expected_name!r}"
+        )
+    if expected_chapters is not None and data.get("chapters") != expected_chapters:
+        raise RuntimeError(f"Verification failed: '{guid_str}' chapters do not match the expected content")
+    if expected_index is not None and data.get("index") != expected_index:
+        raise RuntimeError(
+            f"Verification failed: '{guid_str}' index is {data.get('index')!r}, expected {expected_index!r}"
+        )
+
+
+def verify_script_absent(guid_str: str, base_dir: str | None = None) -> None:
+    """Raise if a script still appears registered or present on disk."""
+    base_dir = _resolve_base_dir(base_dir)
+    settings = _load_appsettings(base_dir)
+    guids = settings.get(LIBRARY_KEY, [])
+    if isinstance(guids, list) and guid_str in guids:
+        raise RuntimeError(f"Verification failed: '{guid_str}' is still registered in AppSettings.json")
+    path = _script_json_path(guid_str, base_dir)
+    if os.path.exists(path):
+        raise RuntimeError(f"Verification failed: '{guid_str}' still exists at '{path}'")
+
+
 # ---------------------------------------------------------------------------
 # Markdown stripping
 # ---------------------------------------------------------------------------
@@ -167,8 +219,7 @@ def generate_json_data(chapters: list[str], guid_str: str, friendly_name: str, i
 
 def save_json_to_texts(data: dict, guid_str: str, base_dir: str | None = None) -> str:
     """Write the script JSON to the Texts directory. Returns the saved path."""
-    if base_dir is None:
-        base_dir = get_camerahub_path()
+    base_dir = _resolve_base_dir(base_dir)
     dest = os.path.join(base_dir, "Texts", f"{guid_str}.json")
     try:
         _atomic_write_json(dest, data)
@@ -179,8 +230,7 @@ def save_json_to_texts(data: dict, guid_str: str, base_dir: str | None = None) -
 
 def update_appsettings(guid_str: str, base_dir: str | None = None) -> str:
     """Register guid_str in AppSettings.json libraryList. Returns the settings path."""
-    if base_dir is None:
-        base_dir = get_camerahub_path()
+    base_dir = _resolve_base_dir(base_dir)
     settings_path = os.path.join(base_dir, "AppSettings.json")
 
     settings = _load_appsettings(base_dir)
@@ -207,6 +257,7 @@ def import_script(text_file: str, friendly_name: str, index: int, base_dir: str 
     if not friendly_name:
         raise ValueError("friendly_name must not be empty")
 
+    base_dir = _resolve_base_dir(base_dir)
     chapters = convert_text_file(text_file)
     guid_str = str(uuid.uuid4()).upper()
     json_data = generate_json_data(chapters, guid_str, friendly_name, index)
@@ -215,6 +266,13 @@ def import_script(text_file: str, friendly_name: str, index: int, base_dir: str 
 
     try:
         settings_path = update_appsettings(guid_str, base_dir)
+        verify_script_registered(
+            guid_str,
+            expected_name=friendly_name,
+            expected_chapters=chapters,
+            expected_index=index,
+            base_dir=base_dir,
+        )
     except Exception:
         try:
             os.unlink(script_path)
@@ -235,8 +293,7 @@ def list_scripts(base_dir: str | None = None) -> list[dict]:
     Each entry: {"guid": str, "friendlyName": str, "index": int, "path": str}
     Scripts missing their JSON file are included with a "missing": True flag.
     """
-    if base_dir is None:
-        base_dir = get_camerahub_path()
+    base_dir = _resolve_base_dir(base_dir)
 
     settings = _load_appsettings(base_dir)
     guids = settings.get(LIBRARY_KEY, [])
@@ -268,9 +325,8 @@ def list_scripts(base_dir: str | None = None) -> list[dict]:
 
 def load_script_json(guid_str: str, base_dir: str | None = None) -> dict:
     """Load and return the raw JSON dict for a script GUID."""
-    if base_dir is None:
-        base_dir = get_camerahub_path()
-    path = os.path.join(base_dir, "Texts", f"{guid_str}.json")
+    base_dir = _resolve_base_dir(base_dir)
+    path = _script_json_path(guid_str, base_dir)
     if not os.path.exists(path):
         raise FileNotFoundError(f"No script file found for GUID '{guid_str}' at '{path}'")
     try:
@@ -345,8 +401,7 @@ def delete_script(name_or_guid: str, base_dir: str | None = None) -> str:
     Remove a script by name or GUID. Deletes the Texts JSON and unregisters from
     AppSettings.json. Returns the GUID that was deleted.
     """
-    if base_dir is None:
-        base_dir = get_camerahub_path()
+    base_dir = _resolve_base_dir(base_dir)
 
     script = _resolve_script(name_or_guid, base_dir)
     guid = script["guid"]
@@ -366,6 +421,7 @@ def delete_script(name_or_guid: str, base_dir: str | None = None) -> str:
         except OSError as e:
             raise OSError(f"Could not delete '{json_path}': {e}") from e
 
+    verify_script_absent(guid, base_dir)
     return guid
 
 
@@ -379,8 +435,7 @@ def rename_script(name_or_guid: str, new_name: str, base_dir: str | None = None)
     """
     if not new_name or not new_name.strip():
         raise ValueError("new_name must not be empty")
-    if base_dir is None:
-        base_dir = get_camerahub_path()
+    base_dir = _resolve_base_dir(base_dir)
 
     script = _resolve_script(name_or_guid, base_dir)
     guid = script["guid"]
@@ -390,6 +445,13 @@ def rename_script(name_or_guid: str, new_name: str, base_dir: str | None = None)
     json_path = os.path.join(base_dir, "Texts", f"{guid}.json")
     _atomic_write_json(json_path, data)
 
+    verify_script_registered(
+        guid,
+        expected_name=new_name.strip(),
+        expected_chapters=data.get("chapters"),
+        expected_index=data.get("index"),
+        base_dir=base_dir,
+    )
     return guid
 
 
@@ -410,8 +472,7 @@ def reindex_scripts(ordered_names_or_guids: list[str] | None = None, base_dir: s
 
     Returns the updated list of script metadata dicts (same shape as list_scripts).
     """
-    if base_dir is None:
-        base_dir = get_camerahub_path()
+    base_dir = _resolve_base_dir(base_dir)
 
     scripts = list_scripts(base_dir)
     if not scripts:
@@ -440,6 +501,13 @@ def reindex_scripts(ordered_names_or_guids: list[str] | None = None, base_dir: s
             data["index"] = new_index
             json_path = os.path.join(base_dir, "Texts", f"{script['guid']}.json")
             _atomic_write_json(json_path, data)
+        verify_script_registered(
+            script["guid"],
+            expected_name=data.get("friendlyName"),
+            expected_chapters=data.get("chapters"),
+            expected_index=new_index,
+            base_dir=base_dir,
+        )
 
     return list_scripts(base_dir)
 
@@ -454,8 +522,7 @@ def edit_script(name_or_guid: str, base_dir: str | None = None) -> str:
     Saves the updated chapters back to the script JSON on exit.
     Returns the GUID edited.
     """
-    if base_dir is None:
-        base_dir = get_camerahub_path()
+    base_dir = _resolve_base_dir(base_dir)
 
     script = _resolve_script(name_or_guid, base_dir)
     guid = script["guid"]
@@ -493,6 +560,13 @@ def edit_script(name_or_guid: str, base_dir: str | None = None) -> str:
     json_path = os.path.join(base_dir, "Texts", f"{guid}.json")
     _atomic_write_json(json_path, data)
 
+    verify_script_registered(
+        guid,
+        expected_name=data.get("friendlyName"),
+        expected_chapters=new_chapters,
+        expected_index=data.get("index"),
+        base_dir=base_dir,
+    )
     return guid
 
 
@@ -506,8 +580,7 @@ def backup(output_path: str | None = None, base_dir: str | None = None) -> str:
     If output_path is None, writes to the current directory with a timestamped name.
     Returns the path of the created archive.
     """
-    if base_dir is None:
-        base_dir = get_camerahub_path()
+    base_dir = _resolve_base_dir(base_dir)
 
     if output_path is None:
         stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -539,8 +612,7 @@ def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) 
 
     Returns the count of scripts written.
     """
-    if base_dir is None:
-        base_dir = get_camerahub_path()
+    base_dir = _resolve_base_dir(base_dir)
 
     if not os.path.isfile(backup_path):
         raise FileNotFoundError(f"Backup file not found: '{backup_path}'")
@@ -601,6 +673,7 @@ def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) 
             current_guids = []
 
         written = 0
+        written_guids: list[str] = []
         for guid in validated_guids:
             if guid in current_guids:
                 continue
@@ -609,10 +682,20 @@ def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) 
             dest = os.path.join(texts_dir, f"{guid}.json")
             _atomic_write_json(dest, backup_scripts[guid])
             current_guids.append(guid)
+            written_guids.append(guid)
             written += 1
 
         current_settings[LIBRARY_KEY] = current_guids
         _atomic_write_json(settings_path, current_settings)
+        for guid in written_guids:
+            if guid in backup_scripts:
+                verify_script_registered(
+                    guid,
+                    expected_name=backup_scripts[guid].get("friendlyName"),
+                    expected_chapters=backup_scripts[guid].get("chapters"),
+                    expected_index=backup_scripts[guid].get("index"),
+                    base_dir=base_dir,
+                )
         return written
 
     written = 0
@@ -629,7 +712,116 @@ def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) 
 
     backup_settings[LIBRARY_KEY] = validated_guids
     _atomic_write_json(settings_path, backup_settings)
+    for guid in validated_guids:
+        if guid in backup_scripts:
+            verify_script_registered(
+                guid,
+                expected_name=backup_scripts[guid].get("friendlyName"),
+                expected_chapters=backup_scripts[guid].get("chapters"),
+                expected_index=backup_scripts[guid].get("index"),
+                base_dir=base_dir,
+            )
     return written
+
+
+# ---------------------------------------------------------------------------
+# Diagnostics
+# ---------------------------------------------------------------------------
+
+def _mtime(path: str) -> str:
+    if not os.path.exists(path):
+        return "missing"
+    return datetime.datetime.fromtimestamp(os.path.getmtime(path)).isoformat(timespec="seconds")
+
+
+def camerahub_is_running() -> bool | None:
+    """Return Camera Hub process status, or None when the platform cannot tell."""
+    if sys.platform == "darwin":
+        result = subprocess.run(
+            ["osascript", "-e", f'application "{_CAMERAHUB_APP_NAME}" is running'],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return None
+        return result.stdout.strip().lower() == "true"
+    if sys.platform == "win32":
+        result = subprocess.run(
+            ["tasklist", "/FI", f"IMAGENAME eq {_CAMERAHUB_WIN_EXE}"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return None
+        return _CAMERAHUB_WIN_EXE.lower() in result.stdout.lower()
+    return None
+
+
+def diagnose_camerahub(base_dir: str | None = None) -> list[dict]:
+    """Return pass/warn/fail diagnostic rows for the Camera Hub data directory."""
+    base_dir = _resolve_base_dir(base_dir)
+    settings_path = os.path.join(base_dir, "AppSettings.json")
+    texts_dir = os.path.join(base_dir, "Texts")
+    rows: list[dict] = []
+
+    def add(status: str, check: str, detail: str) -> None:
+        rows.append({"status": status, "check": check, "detail": detail})
+
+    add("OK" if os.path.isdir(base_dir) else "FAIL", "Data directory", base_dir)
+    add("OK" if os.path.isfile(settings_path) else "WARN", "AppSettings.json", settings_path)
+    add("OK" if os.path.isdir(texts_dir) else "WARN", "Texts directory", texts_dir)
+    add("INFO", "AppSettings modified", _mtime(settings_path))
+
+    running = camerahub_is_running()
+    if running is True:
+        add("WARN", "Camera Hub process", "running; direct writes may be ignored or overwritten")
+    elif running is False:
+        add("OK", "Camera Hub process", "not running")
+    else:
+        add("INFO", "Camera Hub process", "unknown on this platform")
+
+    try:
+        settings = _load_appsettings(base_dir)
+    except Exception as e:
+        add("FAIL", "AppSettings parse", str(e))
+        return rows
+
+    guids = settings.get(LIBRARY_KEY, [])
+    if not isinstance(guids, list):
+        add("FAIL", "Library list", f"'{LIBRARY_KEY}' is {type(guids).__name__}, expected list")
+        guids = []
+    else:
+        add("OK", "Library list", f"{len(guids)} registered script(s)")
+
+    scripts = list_scripts(base_dir)
+    missing = [s for s in scripts if s["missing"]]
+    add("OK" if not missing else "WARN", "Missing or corrupt scripts", f"{len(missing)} issue(s)")
+
+    names: dict[str, int] = {}
+    for script in scripts:
+        name = script["friendlyName"].lower()
+        if name:
+            names[name] = names.get(name, 0) + 1
+    duplicates = [name for name, count in names.items() if count > 1]
+    add("OK" if not duplicates else "WARN", "Duplicate friendly names", ", ".join(duplicates) or "none")
+
+    if os.path.isdir(texts_dir):
+        json_files = [name for name in os.listdir(texts_dir) if name.endswith(".json")]
+        orphaned = [
+            name for name in json_files
+            if os.path.splitext(name)[0] not in set(guids)
+        ]
+        add("INFO", "Texts JSON files", f"{len(json_files)} file(s)")
+        add("OK" if not orphaned else "WARN", "Unregistered JSON files", f"{len(orphaned)} file(s)")
+        latest = "none"
+        if json_files:
+            latest_path = max((os.path.join(texts_dir, name) for name in json_files), key=os.path.getmtime)
+            latest = f"{os.path.basename(latest_path)} modified {_mtime(latest_path)}"
+        add("INFO", "Latest script file", latest)
+
+    return rows
 
 
 # ---------------------------------------------------------------------------
@@ -640,7 +832,7 @@ _CAMERAHUB_APP_NAME = "Camera Hub"
 _CAMERAHUB_WIN_EXE = "CameraHub.exe"
 
 
-def camerahub_stop() -> None:
+def camerahub_stop(wait: bool = False, timeout: float = 10.0) -> None:
     """Quit Camera Hub gracefully."""
     if sys.platform == "darwin":
         subprocess.run(
@@ -651,6 +843,17 @@ def camerahub_stop() -> None:
         subprocess.run(["taskkill", "/IM", _CAMERAHUB_WIN_EXE, "/F"], check=False)
     else:
         raise EnvironmentError(f"camerahub stop not supported on {sys.platform}")
+
+    if wait:
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            running = camerahub_is_running()
+            if running is False:
+                return
+            if running is None:
+                return
+            time.sleep(0.2)
+        raise TimeoutError(f"Camera Hub did not stop within {timeout:g} seconds")
 
 
 def camerahub_start() -> None:
@@ -677,12 +880,18 @@ def _cmd_import(args: argparse.Namespace) -> None:
 
     if getattr(args, "restart", False):
         print("Stopping Camera Hub...")
-        camerahub_stop()
+        camerahub_stop(wait=True)
 
     try:
-        script_path, settings_path = import_script(args.text_file, args.name.strip(), args.index)
+        script_path, settings_path = import_script(
+            args.text_file,
+            args.name.strip(),
+            args.index,
+            base_dir=args.base_dir,
+        )
         print(f"Script saved:  {script_path}")
         print(f"AppSettings:   {settings_path}")
+        print("Verification:  passed")
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -693,7 +902,7 @@ def _cmd_import(args: argparse.Namespace) -> None:
 
 
 def _cmd_export(args: argparse.Namespace) -> None:
-    base_dir = None
+    base_dir = args.base_dir
 
     if args.list:
         try:
@@ -760,18 +969,20 @@ def _cmd_export(args: argparse.Namespace) -> None:
 
 def _cmd_delete(args: argparse.Namespace) -> None:
     try:
-        guid = delete_script(args.name_or_guid)
+        guid = delete_script(args.name_or_guid, base_dir=args.base_dir)
         print(f"Deleted: {guid}")
-    except (KeyError, OSError) as e:
+        print("Verification: passed")
+    except (KeyError, OSError, RuntimeError) as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
 
 def _cmd_rename(args: argparse.Namespace) -> None:
     try:
-        guid = rename_script(args.name_or_guid, args.new_name)
+        guid = rename_script(args.name_or_guid, args.new_name, base_dir=args.base_dir)
         print(f"Renamed: {guid}  ->  {args.new_name}")
-    except (KeyError, ValueError, OSError) as e:
+        print("Verification: passed")
+    except (KeyError, ValueError, OSError, RuntimeError) as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
@@ -779,8 +990,8 @@ def _cmd_rename(args: argparse.Namespace) -> None:
 def _cmd_reindex(args: argparse.Namespace) -> None:
     specs = args.name_or_guid or None
     try:
-        updated = reindex_scripts(specs)
-    except (KeyError, OSError) as e:
+        updated = reindex_scripts(specs, base_dir=args.base_dir)
+    except (KeyError, OSError, RuntimeError) as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     print(f"{'Index':<6} {'Name':<40} {'GUID'}")
@@ -791,8 +1002,9 @@ def _cmd_reindex(args: argparse.Namespace) -> None:
 
 def _cmd_edit(args: argparse.Namespace) -> None:
     try:
-        guid = edit_script(args.name_or_guid)
+        guid = edit_script(args.name_or_guid, base_dir=args.base_dir)
         print(f"Saved: {guid}")
+        print("Verification: passed")
     except (KeyError, ValueError, RuntimeError, OSError) as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -800,7 +1012,7 @@ def _cmd_edit(args: argparse.Namespace) -> None:
 
 def _cmd_backup(args: argparse.Namespace) -> None:
     try:
-        path = backup(args.output)
+        path = backup(args.output, base_dir=args.base_dir)
         print(f"Backup written: {path}")
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
@@ -809,10 +1021,11 @@ def _cmd_backup(args: argparse.Namespace) -> None:
 
 def _cmd_restore(args: argparse.Namespace) -> None:
     try:
-        count = restore(args.backup_file, merge=args.merge)
+        count = restore(args.backup_file, merge=args.merge, base_dir=args.base_dir)
         mode = "merged" if args.merge else "restored"
         print(f"{count} script(s) {mode} from '{args.backup_file}'")
-    except (FileNotFoundError, OSError, ValueError) as e:
+        print("Verification: passed")
+    except (FileNotFoundError, OSError, ValueError, RuntimeError) as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
@@ -820,7 +1033,7 @@ def _cmd_restore(args: argparse.Namespace) -> None:
 def _cmd_camerahub(args: argparse.Namespace) -> None:
     try:
         if args.action == "stop":
-            camerahub_stop()
+            camerahub_stop(wait=True)
             print("Camera Hub stopped.")
         elif args.action == "start":
             camerahub_start()
@@ -833,38 +1046,77 @@ def _cmd_camerahub(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
+def _cmd_doctor(args: argparse.Namespace) -> None:
+    try:
+        rows = diagnose_camerahub(args.base_dir)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    failed = False
+    print("PrompterKit doctor")
+    print("-" * 80)
+    for row in rows:
+        status = row["status"]
+        if status == "FAIL":
+            failed = True
+        print(f"{status:<5} {row['check']:<28} {row['detail']}")
+    if failed:
+        sys.exit(1)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Import/export scripts for Elgato Prompter (Camera Hub)."
     )
     sub = parser.add_subparsers(dest="command", required=True)
+    data_parent = argparse.ArgumentParser(add_help=False)
+    data_parent.add_argument(
+        "--base-dir",
+        help="Camera Hub data directory override (useful for copied fixtures and troubleshooting)",
+    )
 
     # import subcommand
-    p_import = sub.add_parser("import", help="Import a .txt file as a Prompter script")
+    p_import = sub.add_parser("import", parents=[data_parent], help="Import a .txt file as a Prompter script")
     p_import.add_argument("text_file", help="Path to the .txt script file")
     p_import.add_argument("--name", required=True, help="Friendly name for the script")
     p_import.add_argument("--index", type=int, default=0, help="Order index (default: 0)")
     p_import.add_argument("--restart", action="store_true", help="Stop Camera Hub before import and restart after")
 
+    # push alias
+    p_push = sub.add_parser("push", parents=[data_parent], help="Alias for import: push a local script into Camera Hub")
+    p_push.add_argument("text_file", help="Path to the .txt script file")
+    p_push.add_argument("--name", required=True, help="Friendly name for the script")
+    p_push.add_argument("--index", type=int, default=0, help="Order index (default: 0)")
+    p_push.add_argument("--restart", action="store_true", help="Stop Camera Hub before push and restart after")
+
     # export subcommand
-    p_export = sub.add_parser("export", help="Export Prompter script(s) to .txt files")
+    p_export = sub.add_parser("export", parents=[data_parent], help="Export Prompter script(s) to .txt files")
     p_export.add_argument("--guid", help="Export script by GUID")
     p_export.add_argument("--name", help="Export script by friendly name")
     p_export.add_argument("--output", help="Output file (single export) or directory (--all)")
     p_export.add_argument("--all", action="store_true", help="Export all registered scripts")
     p_export.add_argument("--list", action="store_true", help="List all registered scripts")
 
+    # pull alias
+    p_pull = sub.add_parser("pull", parents=[data_parent], help="Alias for export: pull scripts out of Camera Hub")
+    p_pull.add_argument("--guid", help="Export script by GUID")
+    p_pull.add_argument("--name", help="Export script by friendly name")
+    p_pull.add_argument("--output", help="Output file (single export) or directory (--all)")
+    p_pull.add_argument("--all", action="store_true", help="Export all registered scripts")
+    p_pull.add_argument("--list", action="store_true", help="List all registered scripts")
+
     # delete subcommand
-    p_delete = sub.add_parser("delete", help="Remove a script by name or GUID")
+    p_delete = sub.add_parser("delete", parents=[data_parent], help="Remove a script by name or GUID")
     p_delete.add_argument("name_or_guid", help="Script friendly name or GUID")
 
     # rename subcommand
-    p_rename = sub.add_parser("rename", help="Rename an existing script")
+    p_rename = sub.add_parser("rename", parents=[data_parent], help="Rename an existing script")
     p_rename.add_argument("name_or_guid", help="Current friendly name or GUID")
     p_rename.add_argument("new_name", help="New friendly name")
 
     # reindex subcommand
-    p_reindex = sub.add_parser("reindex", help="Reorder the script library by assigning new index values")
+    p_reindex = sub.add_parser("reindex", parents=[data_parent], help="Reorder the script library by assigning new index values")
     p_reindex.add_argument(
         "name_or_guid",
         nargs="*",
@@ -872,17 +1124,20 @@ def main() -> None:
     )
 
     # edit subcommand
-    p_edit = sub.add_parser("edit", help="Open a script's chapters in $EDITOR")
+    p_edit = sub.add_parser("edit", parents=[data_parent], help="Open a script's chapters in $EDITOR")
     p_edit.add_argument("name_or_guid", help="Script friendly name or GUID")
 
     # backup subcommand
-    p_backup = sub.add_parser("backup", help="Export all scripts to a timestamped zip archive")
+    p_backup = sub.add_parser("backup", parents=[data_parent], help="Export all scripts to a timestamped zip archive")
     p_backup.add_argument("--output", help="Output zip path (default: prompter_backup_TIMESTAMP.zip)")
 
     # restore subcommand
-    p_restore = sub.add_parser("restore", help="Restore scripts from a backup zip")
+    p_restore = sub.add_parser("restore", parents=[data_parent], help="Restore scripts from a backup zip")
     p_restore.add_argument("backup_file", help="Path to the backup zip")
     p_restore.add_argument("--merge", action="store_true", help="Add new scripts without replacing existing ones")
+
+    # doctor subcommand
+    sub.add_parser("doctor", parents=[data_parent], help="Inspect Camera Hub data path and common sync failure modes")
 
     # camerahub subcommand
     p_camerahub = sub.add_parser("camerahub", help="Control the Camera Hub application lifecycle")
@@ -892,13 +1147,16 @@ def main() -> None:
 
     dispatch = {
         "import": _cmd_import,
+        "push": _cmd_import,
         "export": _cmd_export,
+        "pull": _cmd_export,
         "delete": _cmd_delete,
         "rename": _cmd_rename,
         "reindex": _cmd_reindex,
         "edit": _cmd_edit,
         "backup": _cmd_backup,
         "restore": _cmd_restore,
+        "doctor": _cmd_doctor,
         "camerahub": _cmd_camerahub,
     }
     dispatch[args.command](args)

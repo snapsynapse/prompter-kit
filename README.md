@@ -31,6 +31,10 @@ python3 prompter_kit.py import script.md --name "My Script"
 # Import and auto-restart Camera Hub around the write
 python3 prompter_kit.py import script.txt --name "My Script" --restart
 
+# Same operation using push/pull language
+python3 prompter_kit.py push script.txt --name "My Script" --restart
+python3 prompter_kit.py pull --name "My Script" --output my_script.txt
+
 # List registered scripts
 python3 prompter_kit.py export --list
 
@@ -56,6 +60,16 @@ python3 prompter_kit.py restore backup.zip --merge   # adds new only
 # Quit or relaunch Camera Hub
 python3 prompter_kit.py camerahub stop
 python3 prompter_kit.py camerahub start
+
+# Diagnose the Camera Hub data directory
+python3 prompter_kit.py doctor
+
+# Test against a copied Camera Hub folder instead of the live one
+python3 prompter_kit.py doctor --base-dir /tmp/prompterkit-eval
+python3 prompter_kit.py push script.txt --name "Eval Script" --base-dir /tmp/prompterkit-eval
+
+# Opt-in live smoke test against the real Camera Hub directory
+scripts/manual_live_eval.sh
 ```
 
 ### GUI
@@ -72,14 +86,20 @@ reorder, backup, and restore, with drag-and-drop file input.
 | Command | What it does |
 |---|---|
 | `import` | Register a `.txt` or `.md` file as a Prompter script. Markdown formatting is stripped. |
+| `push` | Alias for `import`, for pushing a local script into Camera Hub. |
 | `export` | Write a script, or all scripts, back to `.txt`. Supports `--list`, `--name`, `--guid`, `--all`. |
+| `pull` | Alias for `export`, for pulling scripts out of Camera Hub. |
 | `delete` | Remove a script from `Texts/` and `AppSettings.json`. |
 | `rename` | Change a script's friendly name. |
 | `reindex` | Reorder the library. Pass names/GUIDs in desired order, or no args to normalize. |
 | `edit` | Open a script's chapters in `$EDITOR` and re-save on close. |
 | `backup` | Zip all scripts plus `AppSettings.json` into a timestamped archive. |
 | `restore` | Restore from a backup zip. `--merge` keeps existing scripts. |
+| `doctor` | Report Camera Hub path, AppSettings/Text status, missing scripts, duplicate names, orphan files, and whether Camera Hub appears to be running. |
 | `camerahub stop` / `start` | Quit or relaunch Camera Hub (macOS `osascript`, Windows `taskkill`). |
+
+Most commands accept `--base-dir` after the command name. Use it to run against
+a copied Camera Hub directory before touching the live device data.
 
 ## Script format
 
@@ -99,6 +119,8 @@ images, inline code, blockquotes, list bullets, and strikethrough are stripped.
 
 - Atomic writes: JSON is written to a temp file then renamed, so an
   interrupted write cannot corrupt `AppSettings.json`.
+- Post-write verification: write operations reload `AppSettings.json` and the
+  script JSON immediately, then fail if the expected change is not visible.
 - Rollback: if updating `AppSettings.json` fails after writing a new script
   JSON, the script JSON is removed.
 - Restore validation: before writing anything, `restore` checks that the zip
@@ -119,8 +141,10 @@ images, inline code, blockquotes, list bullets, and strikethrough are stripped.
 python3 -m pytest tests/ -v
 ```
 
-79 tests cover import, export, CRUD, backup/restore, Markdown stripping,
-atomic-write rollback, and restore validation.
+89 tests cover import, export, push/pull aliases, CRUD, backup/restore,
+Markdown stripping, atomic-write rollback, post-write verification,
+diagnostics, fixture compatibility, base-directory overrides, simulated
+overwrite failures, and restore validation.
 
 ## Contributing
 

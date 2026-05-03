@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `doctor` command for Camera Hub path, process, library, missing script,
+  duplicate-name, and orphan JSON diagnostics.
+- `push` and `pull` aliases for users who think of local scripts as device
+  sync operations.
+- `--base-dir` troubleshooting override for commands that read or write Camera
+  Hub data.
+- Post-write verification helpers and tests for push/pull round trips,
+  diagnostics, and verification failures.
+- Sanitized Camera Hub fixture data and an opt-in `scripts/manual_live_eval.sh`
+  live smoke test.
+
+### Changed
+- Write operations now verify that expected changes are visible on disk before
+  reporting success.
+- `--restart` waits for Camera Hub to exit before writing.
+- Test suite expanded to 89 tests.
+
 ## [0.4.0] - 2026-04-23
 
 ### Changed

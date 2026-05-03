@@ -1,0 +1,13 @@
+{
+  "GUID": "FIXTURE-ALPHA",
+  "friendlyName": "Fixture Alpha",
+  "chapters": [
+    "Alpha line one",
+    "Alpha line two"
+  ],
+  "index": 1,
+  "cameraHubUnknownField": {
+    "fontScale": 1.2,
+    "scrollSpeed": 4
+  }
+}

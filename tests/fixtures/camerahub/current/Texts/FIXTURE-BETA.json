@@ -1,0 +1,12 @@
+{
+  "GUID": "FIXTURE-BETA",
+  "friendlyName": "Fixture Beta",
+  "chapters": [
+    "Beta line one"
+  ],
+  "index": 0,
+  "cameraHubUnknownField": {
+    "fontScale": 1.0,
+    "scrollSpeed": 3
+  }
+}
