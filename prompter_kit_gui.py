@@ -4,6 +4,7 @@ Run: python3 prompter_kit_gui.py
 """
 import io
 import os
+import secrets
 import tempfile
 import threading
 import webbrowser
@@ -11,11 +12,13 @@ import zipfile
 
 from flask import (
     Flask,
+    abort,
     flash,
     redirect,
     render_template_string,
     request,
     send_file,
+    session,
     url_for,
 )
 
@@ -31,8 +34,11 @@ from prompter_kit import (
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024
 app.config["PROMPTERKIT_BASE_DIR"] = os.environ.get("PROMPTERKIT_BASE_DIR")
 app.config["PROMPTERKIT_OPEN_BROWSER"] = os.environ.get("PROMPTERKIT_OPEN_BROWSER", "1") != "0"
+
+_ALLOWED_IMPORT_EXTENSIONS = {".txt", ".md"}
 
 
 def _base_dir() -> str | None:
@@ -50,6 +56,39 @@ def _parse_index(value: str | None) -> int:
     if index < 0:
         raise ValueError("Index must be zero or greater.")
     return index
+
+
+def _csrf_token() -> str:
+    token = session.get("csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session["csrf_token"] = token
+    return token
+
+
+def _validate_csrf() -> None:
+    expected = session.get("csrf_token")
+    supplied = request.form.get("csrf_token")
+    if not expected or not supplied or not secrets.compare_digest(expected, supplied):
+        abort(400, "Invalid CSRF token.")
+
+
+@app.before_request
+def _protect_post_routes() -> None:
+    if request.method == "POST":
+        _validate_csrf()
+
+
+@app.context_processor
+def _inject_csrf_token():
+    return {"csrf_token": _csrf_token}
+
+
+def _validate_import_filename(filename: str) -> str:
+    suffix = os.path.splitext(filename)[1].lower()
+    if suffix not in _ALLOWED_IMPORT_EXTENSIONS:
+        raise ValueError("Script file must be a .txt or .md file.")
+    return suffix
 
 # ---------------------------------------------------------------------------
 # HTML template
@@ -170,6 +209,7 @@ _TEMPLATE = """<!doctype html>
   <div class="card">
     <h2>Import Script</h2>
     <form method="post" action="{{ url_for('do_import') }}" enctype="multipart/form-data" id="import-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="import-grid">
         <div class="form-group">
           <label>Script file (.txt or .md)</label>
@@ -208,6 +248,7 @@ _TEMPLATE = """<!doctype html>
       <div class="toolbar-left">
         {% if scripts %}
         <form method="post" action="{{ url_for('do_reindex') }}" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn btn-secondary btn-sm">Normalize indexes</button>
         </form>
         <a href="{{ url_for('do_export_all') }}" class="btn btn-secondary btn-sm">Export all (.zip)</a>
@@ -236,6 +277,7 @@ _TEMPLATE = """<!doctype html>
             <div class="rename-form" id="rename-{{ s.guid }}">
               <form method="post" action="{{ url_for('do_rename', guid=s.guid) }}"
                     style="display:flex;gap:6px;align-items:center">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="text" name="new_name" value="{{ s.friendlyName }}" required>
                 <button type="submit" class="btn btn-primary btn-sm">Save</button>
                 <button type="button" class="btn btn-secondary btn-sm"
@@ -254,6 +296,7 @@ _TEMPLATE = """<!doctype html>
               <form method="post" action="{{ url_for('do_delete', guid=s.guid) }}"
                     style="display:inline"
                     onsubmit="return confirm('Delete &quot;{{ s.friendlyName|replace('\"','') }}&quot;?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
               </form>
             </div>
@@ -354,7 +397,12 @@ def do_import():
         flash("Friendly name is required.", "error")
         return redirect(url_for("index"))
 
-    suffix = os.path.splitext(file.filename)[1] or ".txt"
+    try:
+        suffix = _validate_import_filename(file.filename)
+    except ValueError as e:
+        flash(str(e), "error")
+        return redirect(url_for("index"))
+
     fd, tmp_path = tempfile.mkstemp(suffix=suffix)
     try:
         with os.fdopen(fd, "wb") as f:

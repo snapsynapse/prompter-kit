@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Plain-text AI-assisted install guide with a copy-paste prompt, approval
+  checklist, and prompt-injection mitigations for users installing through
+  ChatGPT, Claude, Codex, or another local coding assistant.
+- `requirements-gui.txt` for repeatable GUI dependency installation.
 - `doctor` command for Camera Hub path, process, library, missing script,
   duplicate-name, and orphan JSON diagnostics.
 - `push` and `pull` aliases for users who think of local scripts as device
@@ -22,8 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Write operations now verify that expected changes are visible on disk before
   reporting success.
+- GUI write routes now require CSRF tokens, and script imports reject unsupported
+  file extensions and oversized uploads.
+- Install documentation now recommends a local Python virtual environment
+  instead of global Flask installation.
 - `--restart` waits for Camera Hub to exit before writing.
-- Test suite expanded to 89 tests.
+- Test suite expanded to 100 tests.
 
 ## [0.4.0] - 2026-04-23
 

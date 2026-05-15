@@ -12,6 +12,13 @@ import prompter_kit_gui
 from prompter_kit import LIBRARY_KEY, list_scripts, load_script_json
 
 
+def _csrf_form(client, **data):
+    token = "test-csrf-token"
+    with client.session_transaction() as session:
+        session["csrf_token"] = token
+    return {"csrf_token": token, **data}
+
+
 @pytest.fixture()
 def client():
     prompter_kit_gui.app.config.update(TESTING=True, PROMPTERKIT_BASE_DIR=None)
@@ -99,11 +106,12 @@ def test_import_uses_configured_base_dir(configured_client):
 
     response = client.post(
         "/import",
-        data={
-            "name": "GUI Import",
-            "index": "2",
-            "file": (io.BytesIO(b"One\nTwo\n"), "script.txt"),
-        },
+        data=_csrf_form(
+            client,
+            name="GUI Import",
+            index="2",
+            file=(io.BytesIO(b"One\nTwo\n"), "script.txt"),
+        ),
         content_type="multipart/form-data",
         follow_redirects=True,
     )
@@ -122,11 +130,12 @@ def test_import_rejects_invalid_index_before_writing(configured_client):
 
     response = client.post(
         "/import",
-        data={
-            "name": "Bad Index",
-            "index": "not-a-number",
-            "file": (io.BytesIO(b"One\n"), "script.txt"),
-        },
+        data=_csrf_form(
+            client,
+            name="Bad Index",
+            index="not-a-number",
+            file=(io.BytesIO(b"One\n"), "script.txt"),
+        ),
         content_type="multipart/form-data",
         follow_redirects=True,
     )
@@ -141,11 +150,12 @@ def test_import_rejects_negative_index_before_writing(configured_client):
 
     response = client.post(
         "/import",
-        data={
-            "name": "Negative Index",
-            "index": "-1",
-            "file": (io.BytesIO(b"One\n"), "script.txt"),
-        },
+        data=_csrf_form(
+            client,
+            name="Negative Index",
+            index="-1",
+            file=(io.BytesIO(b"One\n"), "script.txt"),
+        ),
         content_type="multipart/form-data",
         follow_redirects=True,
     )
@@ -161,7 +171,7 @@ def test_rename_uses_configured_base_dir(configured_client):
 
     response = client.post(
         "/rename/GUID-ONE",
-        data={"new_name": "New Name"},
+        data=_csrf_form(client, new_name="New Name"),
         follow_redirects=True,
     )
 
@@ -173,7 +183,7 @@ def test_delete_uses_configured_base_dir(configured_client):
     client, tmp_path = configured_client
     _make_script(tmp_path, "GUID-ONE", "Delete Me", ["line"], index=0)
 
-    response = client.post("/delete/GUID-ONE", follow_redirects=True)
+    response = client.post("/delete/GUID-ONE", data=_csrf_form(client), follow_redirects=True)
 
     assert response.status_code == 200
     assert list_scripts(base_dir=str(tmp_path)) == []
@@ -185,7 +195,7 @@ def test_reindex_uses_configured_base_dir(configured_client):
     _make_script(tmp_path, "GUID-A", "Alpha", ["a"], index=10)
     _make_script(tmp_path, "GUID-B", "Beta", ["b"], index=3)
 
-    response = client.post("/reindex", follow_redirects=True)
+    response = client.post("/reindex", data=_csrf_form(client), follow_redirects=True)
 
     assert response.status_code == 200
     alpha = load_script_json("GUID-A", base_dir=str(tmp_path))
@@ -203,3 +213,51 @@ def test_export_uses_configured_base_dir(configured_client):
     assert response.status_code == 200
     assert response.data == b"one\ntwo\n"
     assert response.headers["Content-Disposition"].startswith("attachment;")
+
+
+def test_post_rejects_missing_csrf_token(configured_client):
+    client, tmp_path = configured_client
+    _make_script(tmp_path, "GUID-ONE", "Delete Me", ["line"], index=0)
+
+    response = client.post("/delete/GUID-ONE")
+
+    assert response.status_code == 400
+    assert len(list_scripts(base_dir=str(tmp_path))) == 1
+
+
+def test_import_rejects_unsupported_extension(configured_client):
+    client, tmp_path = configured_client
+
+    response = client.post(
+        "/import",
+        data=_csrf_form(
+            client,
+            name="Not Text",
+            index="0",
+            file=(io.BytesIO(b"print('no')\n"), "script.py"),
+        ),
+        content_type="multipart/form-data",
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Script file must be a .txt or .md file." in response.data
+    assert list_scripts(base_dir=str(tmp_path)) == []
+
+
+def test_import_rejects_oversized_upload(configured_client):
+    client, tmp_path = configured_client
+
+    response = client.post(
+        "/import",
+        data=_csrf_form(
+            client,
+            name="Too Big",
+            index="0",
+            file=(io.BytesIO(b"x" * (prompter_kit_gui.app.config["MAX_CONTENT_LENGTH"] + 1)), "big.txt"),
+        ),
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 413
+    assert list_scripts(base_dir=str(tmp_path)) == []
