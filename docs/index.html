@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <title>PrompterKit &mdash; Manage your Elgato Prompter scripts</title>
-  <meta name="description" content="PrompterKit is a free tool for YouTube creators. Import text files, organize, and back up your Elgato Prompter scripts from a web app or one command.">
+  <meta name="description" content="PrompterKit is a free local tool for YouTube creators. Import, export, rename, reorder, and back up Elgato Prompter scripts without Camera Hub lock-in.">
   <meta name="keywords" content="elgato prompter, camera hub scripts, teleprompter import, prompter backup, youtube creator tools, elgato camera hub, teleprompter management">
   <meta name="author" content="Sam Rogers">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
@@ -23,7 +23,7 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="PrompterKit">
   <meta property="og:title" content="PrompterKit">
-  <meta property="og:description" content="Import, organize, and back up your Elgato Prompter scripts. Free tool for YouTube creators.">
+  <meta property="og:description" content="Import, export, rename, reorder, and back up Elgato Prompter scripts without Camera Hub lock-in. Free local tool for YouTube creators.">
   <meta property="og:image" content="https://prompterkit.app/imgs/og.png">
   <meta property="og:image:alt" content="PrompterKit &mdash; Manage your Elgato Prompter scripts">
   <meta property="og:image:width" content="1200">
@@ -44,7 +44,7 @@
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="PrompterKit">
-  <meta name="twitter:description" content="Import, organize, and back up your Elgato Prompter scripts. Free tool for YouTube creators.">
+  <meta name="twitter:description" content="Import, export, rename, reorder, and back up Elgato Prompter scripts without Camera Hub lock-in. Free local tool for YouTube creators.">
   <meta name="twitter:image" content="https://prompterkit.app/imgs/og.png">
   <meta name="twitter:site" content="@snapsynapse">
   <meta name="twitter:creator" content="@snapsynapse">
@@ -60,7 +60,7 @@
     "@type": "TechArticle",
     "headline": "PrompterKit",
     "alternativeHeadline": "Manage your Elgato Prompter scripts",
-    "description": "PrompterKit is a free, open-source tool for managing Elgato Prompter scripts. Import text or Markdown files, rename and reorder scripts, back up your entire library, and control Camera Hub from a local web interface — no technical skills required.",
+    "description": "PrompterKit is a free, open-source local tool for managing Elgato Prompter scripts. Use the web GUI for import, export, rename, delete, and index normalization, or use the CLI for the complete reorder, backup, restore, and Camera Hub lifecycle workflow.",
     "inLanguage": "en",
     "url": "https://prompterkit.app/",
     "mainEntityOfPage": { "@type": "WebPage", "@id": "https://prompterkit.app/" },
@@ -89,7 +89,7 @@
     "@type": "DefinedTerm",
     "name": "PrompterKit",
     "alternateName": ["prompterkit", "Prompter Kit"],
-    "description": "A free, open-source CLI and web GUI for managing Elgato Prompter scripts. Wraps the Camera Hub data format to provide import, export, backup, restore, and full CRUD operations without requiring any Camera Hub UI interaction.",
+    "description": "A free, open-source CLI and web GUI for managing Elgato Prompter scripts. Wraps the Camera Hub data format to provide import, export, rename, delete, reorder, backup, restore, and Camera Hub lifecycle operations without depending on the Camera Hub UI.",
     "url": "https://prompterkit.app/",
     "inDefinedTermSet": {
       "@type": "DefinedTermSet",
@@ -471,19 +471,21 @@
 <main id="main-content">
 <section class="hero">
   <div class="container">
-    <h1>Your scripts. Always safe.</h1>
+    <h1>Manage Elgato Prompter scripts without Camera Hub lock-in.</h1>
     <p class="byline">
       By <a href="https://www.linkedin.com/in/samrogers" target="_blank" rel="noopener author">Sam Rogers</a>, <a href="https://snapsynapse.com" target="_blank" rel="noopener">Snap Synapse</a>
       <span class="sep">&middot;</span>
       Published <time datetime="2026-04-19">April 19, 2026</time>
       <span class="sep">&middot;</span>
+      Updated <time id="repo-updated-date" datetime="2026-04-19">April 19, 2026</time>
+      <span class="sep">&middot;</span>
       <a href="https://opensource.org/licenses/MIT" rel="license" target="_blank">MIT</a>
     </p>
-    <p class="subtitle">A free tool for Elgato Prompter creators. Import any text file, organize your library, and back up everything &mdash; no tech skills required.</p>
-    <p class="hook">Camera Hub gives you no way to import scripts, rename them, or back them up. One reinstall and your library is gone. PrompterKit fixes all of that with a web interface that runs right in your browser.</p>
+    <p class="subtitle">A free local tool for Elgato Prompter creators. Import any text file, organize your library, and back up everything from a simple GUI or one command.</p>
+    <p class="hook">Camera Hub gives you no way to import scripts, rename them, or back them up. One reinstall and your library is gone. PrompterKit wraps the local Camera Hub data format so your scripts stay portable, inspectable, and recoverable.</p>
     <p><img src="/imgs/og.png" alt="PrompterKit &mdash; Manage your Elgato Prompter scripts" width="1200" height="630" style="max-width:100%;height:auto;border-radius:12px;margin-top:1.5rem"></p>
     <div class="cta-row">
-      <a href="#install" class="btn btn-primary">Get PrompterKit free</a>
+      <a href="#install" class="btn btn-primary">Install PrompterKit</a>
       <a href="https://github.com/snapsynapse/prompter-kit" class="btn btn-secondary" target="_blank" rel="noopener">View on GitHub</a>
     </div>
   </div>
@@ -503,12 +505,12 @@
       <div class="pillar">
         <span class="icon" aria-hidden="true">🗄️</span>
         <h3>Back up your library</h3>
-        <p>One click archives every script to a zip file. Restore the whole thing in seconds after a Camera Hub update, a reinstall, or a move to a new computer.</p>
+        <p>The CLI archives every script to a zip file and restores the whole library after a Camera Hub update, a reinstall, or a move to a new computer.</p>
       </div>
       <div class="pillar">
         <span class="icon" aria-hidden="true">🌐</span>
         <h3>No Terminal needed</h3>
-        <p>The web interface opens automatically in your browser. See all your scripts, rename them, delete old drafts, and export any episode as a plain text file.</p>
+        <p>The web interface opens automatically in your browser. See all your scripts, import new drafts, rename them, delete old versions, normalize indexes, and export episodes as plain text.</p>
       </div>
     </div>
 
@@ -527,8 +529,8 @@
         <tr><td class="label">Delete a script</td><td class="check">—</td><td class="check">✓</td></tr>
         <tr><td class="label">Reorder your library</td><td class="check">—</td><td class="check">✓</td></tr>
         <tr><td class="label">Export to a text file</td><td class="check">—</td><td class="check">✓</td></tr>
-        <tr><td class="label">Backup &amp; restore</td><td class="check">—</td><td class="check">✓</td></tr>
-        <tr><td class="label">Web interface</td><td class="check">—</td><td class="check">✓</td></tr>
+        <tr><td class="label">Backup &amp; restore via CLI</td><td class="check">—</td><td class="check">✓</td></tr>
+        <tr><td class="label">Web interface for daily script management</td><td class="check">—</td><td class="check">✓</td></tr>
       </tbody>
     </table>
   </div>
@@ -538,6 +540,8 @@
   <div class="container">
     <h2>Set up in three steps</h2>
     <p>PrompterKit requires Python 3.10 or later. Most Macs ship with it. Windows users can download it from <a href="https://python.org" target="_blank" rel="noopener">python.org</a>.</p>
+    <p>Runs locally. No accounts, no telemetry, no cloud sync. Your scripts stay on your machine.</p>
+    <p><strong>Use with care:</strong> PrompterKit edits local Camera Hub data files because Camera Hub does not provide import, export, or backup tools. Close Camera Hub before write operations and use PrompterKit at your own risk. The software is provided under the MIT License without warranty.</p>
 
     <ol class="steps">
       <li>
@@ -591,7 +595,7 @@ cd prompter-kit</pre>
         <strong>Canonical reference.</strong> This page is the authoritative home for PrompterKit.
         Any discussion on YouTube creator forums, Reddit, or social media should link to
         <a href="https://prompterkit.app/">prompterkit.app</a> as the source.
-        Last updated: <time datetime="2026-04-19">2026-04-19</time>.
+        Last updated: <time id="canonical-updated-date" datetime="2026-04-19">2026-04-19</time>.
         <a href="https://github.com/snapsynapse/prompter-kit/commits/main/CHANGELOG.md" target="_blank" rel="noopener">Revision history &rarr;</a>
       </aside>
     </div>
@@ -617,5 +621,64 @@ cd prompter-kit</pre>
   </div>
 </footer>
 
+<script>
+(function () {
+  const latestCommitUrl = "https://api.github.com/repos/snapsynapse/prompter-kit/commits/main";
+  const humanDate = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC"
+  });
+
+  function dateOnly(isoDate) {
+    return isoDate.slice(0, 10);
+  }
+
+  function updateTime(id, isoDate, formatter) {
+    const node = document.getElementById(id);
+    if (!node) return;
+    node.dateTime = dateOnly(isoDate);
+    node.textContent = formatter(new Date(isoDate));
+  }
+
+  function updateMeta(selector, isoDate) {
+    const node = document.querySelector(selector);
+    if (node) node.setAttribute("content", isoDate);
+  }
+
+  function updateStructuredData(isoDate) {
+    const node = document.querySelector('script[type="application/ld+json"]');
+    if (!node) return;
+    try {
+      const data = JSON.parse(node.textContent);
+      data.dateModified = dateOnly(isoDate);
+      node.textContent = JSON.stringify(data, null, 2);
+    } catch (_error) {
+      // Keep the static fallback if structured data cannot be parsed.
+    }
+  }
+
+  fetch(latestCommitUrl, {
+    headers: { "Accept": "application/vnd.github+json" },
+    cache: "no-store"
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error("GitHub lookup failed");
+      return response.json();
+    })
+    .then((data) => {
+      const updatedAt = data && data.commit && data.commit.committer && data.commit.committer.date;
+      if (!updatedAt) return;
+      updateTime("repo-updated-date", updatedAt, (date) => humanDate.format(date));
+      updateTime("canonical-updated-date", updatedAt, (date) => dateOnly(date.toISOString()));
+      updateMeta('meta[property="article:modified_time"]', updatedAt);
+      updateStructuredData(updatedAt);
+    })
+    .catch(() => {
+      // Static dates remain visible when the dynamic repo lookup is unavailable.
+    });
+})();
+</script>
 </body>
 </html>
