@@ -4,7 +4,6 @@ Run: python3 prompter_kit_gui.py
 """
 import io
 import os
-import sys
 import tempfile
 import threading
 import webbrowser
@@ -32,6 +31,25 @@ from prompter_kit import (
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+app.config["PROMPTERKIT_BASE_DIR"] = os.environ.get("PROMPTERKIT_BASE_DIR")
+app.config["PROMPTERKIT_OPEN_BROWSER"] = os.environ.get("PROMPTERKIT_OPEN_BROWSER", "1") != "0"
+
+
+def _base_dir() -> str | None:
+    """Return the configured Camera Hub data override, if any."""
+    return app.config.get("PROMPTERKIT_BASE_DIR") or None
+
+
+def _parse_index(value: str | None) -> int:
+    if value in (None, ""):
+        return 0
+    try:
+        index = int(value)
+    except ValueError as e:
+        raise ValueError("Index must be a whole number.") from e
+    if index < 0:
+        raise ValueError("Index must be zero or greater.")
+    return index
 
 # ---------------------------------------------------------------------------
 # HTML template
@@ -312,7 +330,7 @@ function toggleRename(guid) {
 @app.route("/")
 def index():
     try:
-        scripts = list_scripts()
+        scripts = list_scripts(_base_dir())
     except Exception as e:
         flash(str(e), "error")
         scripts = []
@@ -323,7 +341,11 @@ def index():
 def do_import():
     file = request.files.get("file")
     name = request.form.get("name", "").strip()
-    index = int(request.form.get("index", 0) or 0)
+    try:
+        index = _parse_index(request.form.get("index"))
+    except ValueError as e:
+        flash(str(e), "error")
+        return redirect(url_for("index"))
 
     if not file or not file.filename:
         flash("No file selected.", "error")
@@ -337,7 +359,7 @@ def do_import():
     try:
         with os.fdopen(fd, "wb") as f:
             file.save(f)
-        script_path, _ = import_script(tmp_path, name, index)
+        import_script(tmp_path, name, index, base_dir=_base_dir())
         flash(f'Imported "{name}" successfully.', "success")
     except Exception as e:
         flash(f"Import failed: {e}", "error")
@@ -353,7 +375,7 @@ def do_import():
 @app.route("/export/<guid>")
 def do_export(guid):
     try:
-        data = load_script_json(guid)
+        data = load_script_json(guid, _base_dir())
         chapters = data.get("chapters", [])
         if not chapters:
             flash("Script has no chapters to export.", "error")
@@ -375,14 +397,14 @@ def do_export(guid):
 @app.route("/export-all")
 def do_export_all():
     try:
-        scripts = list_scripts()
+        scripts = list_scripts(_base_dir())
         buf = io.BytesIO()
         used_names: set[str] = set()
         with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
             for s in scripts:
                 if s["missing"]:
                     continue
-                data = load_script_json(s["guid"])
+                data = load_script_json(s["guid"], _base_dir())
                 chapters = data.get("chapters", [])
                 if not chapters:
                     continue
@@ -404,7 +426,7 @@ def do_export_all():
 @app.route("/delete/<guid>", methods=["POST"])
 def do_delete(guid):
     try:
-        deleted = delete_script(guid)
+        deleted = delete_script(guid, base_dir=_base_dir())
         flash(f"Deleted script {deleted[:8]}…", "success")
     except Exception as e:
         flash(f"Delete failed: {e}", "error")
@@ -415,7 +437,7 @@ def do_delete(guid):
 def do_rename(guid):
     new_name = request.form.get("new_name", "").strip()
     try:
-        rename_script(guid, new_name)
+        rename_script(guid, new_name, base_dir=_base_dir())
         flash(f'Renamed to "{new_name}".', "success")
     except Exception as e:
         flash(f"Rename failed: {e}", "error")
@@ -425,7 +447,7 @@ def do_rename(guid):
 @app.route("/reindex", methods=["POST"])
 def do_reindex():
     try:
-        reindex_scripts()
+        reindex_scripts(base_dir=_base_dir())
         flash("Indexes normalized.", "success")
     except Exception as e:
         flash(f"Reindex failed: {e}", "error")
@@ -444,6 +466,7 @@ def _open_browser(port: int) -> None:
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    threading.Thread(target=_open_browser, args=(port,), daemon=True).start()
+    if app.config["PROMPTERKIT_OPEN_BROWSER"]:
+        threading.Thread(target=_open_browser, args=(port,), daemon=True).start()
     print(f"Prompter Tools GUI running at http://127.0.0.1:{port}")
     app.run(host="127.0.0.1", port=port, debug=False)

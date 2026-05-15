@@ -493,7 +493,8 @@ def reindex_scripts(ordered_names_or_guids: list[str] | None = None, base_dir: s
     else:
         final_order = scripts  # already sorted by (index, name)
 
-    for new_index, script in enumerate(final_order):
+    new_index = 0
+    for script in final_order:
         if script["missing"]:
             continue
         data = load_script_json(script["guid"], base_dir)
@@ -508,6 +509,7 @@ def reindex_scripts(ordered_names_or_guids: list[str] | None = None, base_dir: s
             expected_index=new_index,
             base_dir=base_dir,
         )
+        new_index += 1
 
     return list_scripts(base_dir)
 

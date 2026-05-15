@@ -78,8 +78,23 @@ scripts/manual_live_eval.sh
 python3 prompter_kit_gui.py
 ```
 
-Opens a local web app in your browser for import, export, rename, delete,
-reorder, backup, and restore, with drag-and-drop file input.
+Opens a local web app in your browser for import, export, rename, delete, and
+index normalization, with drag-and-drop file input.
+
+To test the GUI against a copied Camera Hub folder instead of live device data:
+
+```
+PROMPTERKIT_BASE_DIR=/tmp/prompterkit-eval python3 prompter_kit_gui.py
+```
+
+To start the GUI without opening a browser automatically:
+
+```
+PROMPTERKIT_OPEN_BROWSER=0 python3 prompter_kit_gui.py
+```
+
+The CLI currently remains the complete surface for explicit reorder,
+backup, and restore workflows.
 
 ## Commands
 
@@ -141,10 +156,22 @@ images, inline code, blockquotes, list bullets, and strikethrough are stripped.
 python3 -m pytest tests/ -v
 ```
 
-89 tests cover import, export, push/pull aliases, CRUD, backup/restore,
+97 tests cover import, export, push/pull aliases, CRUD, GUI routes, backup/restore,
 Markdown stripping, atomic-write rollback, post-write verification,
 diagnostics, fixture compatibility, base-directory overrides, simulated
 overwrite failures, and restore validation.
+
+Run the GUI smoke eval against a disposable fixture copy:
+
+```
+scripts/gui_smoke_eval.sh
+```
+
+Run the opt-in live eval against the real Camera Hub directory:
+
+```
+scripts/manual_live_eval.sh
+```
 
 ## Contributing
 

@@ -198,6 +198,21 @@ def test_reindex_empty_library(tmp_path):
     assert result == []
 
 
+def test_reindex_skips_missing_scripts_without_index_gaps(tmp_path):
+    _setup(tmp_path, [
+        ("G1", "Alpha", ["a"], 10),
+        ("G2", "Beta", ["b"], 20),
+    ])
+    _register_guid(tmp_path, "GHOST")
+
+    reindex_scripts(base_dir=str(tmp_path))
+
+    alpha = load_script_json("G1", base_dir=str(tmp_path))
+    beta = load_script_json("G2", base_dir=str(tmp_path))
+    assert alpha["index"] == 0
+    assert beta["index"] == 1
+
+
 # ---------------------------------------------------------------------------
 # backup
 # ---------------------------------------------------------------------------
