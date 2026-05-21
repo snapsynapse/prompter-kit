@@ -13,6 +13,7 @@ from prompter_kit import (
     LIBRARY_KEY,
     diagnose_camerahub,
     export_script,
+    get_camerahub_path,
     import_script,
     list_scripts,
     verify_script_absent,
@@ -44,6 +45,64 @@ def _make_script(base, guid, name, chapters, index=0):
     if guid not in settings[LIBRARY_KEY]:
         settings[LIBRARY_KEY].append(guid)
     settings_path.write_text(json.dumps(settings), encoding="utf-8")
+
+
+def test_macos_camerahub_path_defaults_to_spaced_directory(tmp_path, monkeypatch):
+    monkeypatch.setattr(sys, "platform", "darwin")
+    monkeypatch.setenv("HOME", str(tmp_path))
+
+    assert get_camerahub_path() == os.path.join(
+        str(tmp_path),
+        "Library",
+        "Application Support",
+        "Elgato",
+        "Camera Hub",
+    )
+
+
+def test_macos_camerahub_path_falls_back_to_legacy_directory(tmp_path, monkeypatch):
+    monkeypatch.setattr(sys, "platform", "darwin")
+    monkeypatch.setenv("HOME", str(tmp_path))
+    legacy = tmp_path / "Library" / "Application Support" / "Elgato" / "CameraHub"
+    legacy.mkdir(parents=True)
+
+    assert get_camerahub_path() == str(legacy)
+
+
+def test_import_without_base_dir_writes_to_spaced_macos_camerahub_directory(tmp_path, monkeypatch):
+    monkeypatch.setattr(sys, "platform", "darwin")
+    monkeypatch.setenv("HOME", str(tmp_path))
+    source = tmp_path / "source.txt"
+    source.write_text("Visible in Camera Hub\n", encoding="utf-8")
+
+    script_path, settings_path = import_script(str(source), "Issue 5 Regression", 0)
+    expected_base = tmp_path / "Library" / "Application Support" / "Elgato" / "Camera Hub"
+
+    assert script_path.startswith(str(expected_base))
+    assert settings_path == str(expected_base / "AppSettings.json")
+    assert not (tmp_path / "Library" / "Application Support" / "Elgato" / "CameraHub").exists()
+    scripts = list_scripts()
+    assert [script["friendlyName"] for script in scripts] == ["Issue 5 Regression"]
+
+
+def test_windows_camerahub_path_prefers_spaced_directory(tmp_path, monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setenv("APPDATA", str(tmp_path))
+    spaced = tmp_path / "Elgato" / "Camera Hub"
+    legacy = tmp_path / "Elgato" / "CameraHub"
+    spaced.mkdir(parents=True)
+    legacy.mkdir()
+
+    assert get_camerahub_path() == str(spaced)
+
+
+def test_windows_camerahub_path_falls_back_to_legacy_directory(tmp_path, monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setenv("APPDATA", str(tmp_path))
+    legacy = tmp_path / "Elgato" / "CameraHub"
+    legacy.mkdir(parents=True)
+
+    assert get_camerahub_path() == str(legacy)
 
 
 def test_verify_script_registered_detects_missing_appsettings_entry(tmp_path):
