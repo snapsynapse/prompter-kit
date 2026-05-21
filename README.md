@@ -200,8 +200,11 @@ images, inline code, blockquotes, list bullets, and strikethrough are stripped.
 
 | Platform | Path |
 |---|---|
-| macOS | `~/Library/Application Support/Elgato/CameraHub/` |
-| Windows | `%APPDATA%\Elgato\CameraHub\` |
+| macOS | `~/Library/Application Support/Elgato/Camera Hub/` |
+| Windows | `%APPDATA%\Elgato\Camera Hub\` |
+
+PrompterKit falls back to the legacy `CameraHub` directory when only that older
+path exists.
 
 ## Running tests
 
@@ -209,10 +212,11 @@ images, inline code, blockquotes, list bullets, and strikethrough are stripped.
 python3 -m pytest tests/ -v
 ```
 
-100 tests cover import, export, push/pull aliases, CRUD, GUI routes, CSRF
+105 tests cover import, export, push/pull aliases, CRUD, GUI routes, CSRF
 protection, upload validation, backup/restore, Markdown stripping, atomic-write
 rollback, post-write verification, diagnostics, fixture compatibility,
-base-directory overrides, simulated overwrite failures, and restore validation.
+base-directory overrides, simulated overwrite failures, Camera Hub path
+discovery, and restore validation.
 
 Run the GUI smoke eval against a disposable fixture copy:
 

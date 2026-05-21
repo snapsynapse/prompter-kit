@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-21
+
 ### Added
 - Plain-text AI-assisted install guide with a copy-paste prompt, approval
   checklist, and prompt-injection mitigations for users installing through
@@ -22,8 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   diagnostics, and verification failures.
 - Sanitized Camera Hub fixture data and an opt-in `scripts/manual_live_eval.sh`
   live smoke test.
+- Regression coverage for current Camera Hub data directory discovery on macOS
+  and Windows.
 
 ### Changed
+- Camera Hub data directory discovery now prefers `Camera Hub` with a space,
+  matching current Camera Hub builds, and falls back to legacy `CameraHub` when
+  only that directory exists.
 - Write operations now verify that expected changes are visible on disk before
   reporting success.
 - GUI write routes now require CSRF tokens, and script imports reject unsupported
@@ -31,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Install documentation now recommends a local Python virtual environment
   instead of global Flask installation.
 - `--restart` waits for Camera Hub to exit before writing.
-- Test suite expanded to 100 tests.
+- Test suite expanded to 105 tests.
 
 ## [0.4.0] - 2026-04-23
 
