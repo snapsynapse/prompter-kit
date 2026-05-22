@@ -26,17 +26,23 @@ Close Camera Hub before any write operation, or use `--restart` / the
 
 - Manual setup: clone the repo, create a local virtual environment, install the
   GUI dependency, and launch PrompterKit yourself.
-- AI-assisted setup: give an assistant the plain-text guide at
-  https://prompterkit.app/ai-assisted-install.txt and approve commands one at a
-  time.
+- AI-assisted setup: give an assistant the structured guide at
+  https://prompterkit.app/.well-known/assistant-guide.txt and approve commands
+  one at a time.
 - Disposable test mode: use `--base-dir` or `PROMPTERKIT_BASE_DIR` to test
   against a copied Camera Hub folder before touching live device data.
 
 ### AI-assisted install
 
 If you want ChatGPT, Claude, Codex, or another local coding assistant to walk
-you through setup, use the guided prompt and approval checklist at
-https://prompterkit.app/ai-assisted-install.txt.
+you through setup, use the structured guide and approval checklist at
+https://prompterkit.app/.well-known/assistant-guide.txt.
+
+That guide follows the [GuideCheck](https://guidecheck.org/) standard, a
+plain-text, strict-ASCII format that keeps what a human reviews identical to
+what an assistant executes. It is built to GuideCheck conformance Level 3
+(safety contract, required sections, explicit approval gates) and can be
+checked with the verifier at https://guidecheck.org/verify.
 
 The short version: only use the official repository, ask the assistant to
 explain every command before running it, do not approve `sudo` or shell scripts
