@@ -1,6 +1,6 @@
 # PrompterKit
 
-![PrompterKit -- Manage your Elgato Prompter scripts](/imgs/og.png)
+![PrompterKit -- Manage your Elgato Prompter scripts](imgs/og.png)
 
 Manage your Elgato Prompter scripts from the command line or a local web GUI.
 Camera Hub stores scripts in opaque JSON with no import, export, rename,
@@ -216,7 +216,7 @@ scripts/manual_live_eval.sh
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## License
 

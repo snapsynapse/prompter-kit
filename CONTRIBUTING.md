@@ -11,6 +11,8 @@ pip install pytest
 python3 -m pytest tests/ -v
 ```
 
+See [ARCHITECTURE.md](ARCHITECTURE.md) for how the codebase is organized.
+
 ## Making changes
 
 - One logical change per PR.

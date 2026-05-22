@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Assistant guide at `/.well-known/assistant-guide.txt`, built to the
   [GuideCheck](https://guidecheck.org/) standard at conformance Level 3.
+- `ARCHITECTURE.md` describing the Camera Hub data model, module layout, and
+  write-safety design.
 
 ### Changed
 - Documentation and `llms.txt` now point to the GuideCheck-conformant
@@ -19,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick setup on the site and in the README now splits into AI Assisted
   Install and Terminal Install tabs; the CLI command reference moved to its
   own optional section.
+
+### Fixed
+- README header image now uses a repo-relative path so it renders on GitHub.
 
 ## [0.5.0] - 2026-05-21
 
