@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-05-21
+
 ### Added
 - Assistant guide at `/.well-known/assistant-guide.txt`, built to the
   [GuideCheck](https://guidecheck.org/) standard at conformance Level 3.
@@ -14,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Documentation and `llms.txt` now point to the GuideCheck-conformant
   assistant guide.
+- Quick setup on the site and in the README now splits into AI Assisted
+  Install and Terminal Install tabs; the CLI command reference moved to its
+  own optional section.
 
 ## [0.5.0] - 2026-05-21
 
