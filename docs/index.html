@@ -588,9 +588,10 @@
       <div class="tab-panels">
         <div class="tab-panel" id="panel-ai">
           <p style="margin-bottom:1rem">The simplest way in: ask ChatGPT, Claude, Codex, or another local coding assistant to walk you through setup. Point it at the <a href="/.well-known/assistant-guide.txt">structured assistant guide</a> and approve each command as it runs.</p>
-          <p style="margin-bottom:1rem">The guide follows the <a href="https://guidecheck.org/" target="_blank" rel="noopener">GuideCheck</a> standard for human-verifiable assistant guides, a plain-text format that keeps what you review identical to what an assistant executes. It is built to GuideCheck conformance Level 4, the highest guide-file level, and can be checked at <a href="https://guidecheck.org/verify" target="_blank" rel="noopener">guidecheck.org/verify</a>.</p>
+          <p style="margin-bottom:1rem">The guide follows the <a href="https://guidecheck.org/" target="_blank" rel="noopener">GuideCheck</a> standard for human-verifiable assistant guides, a plain-text format that keeps what you review identical to what an assistant executes. It is built to GuideCheck conformance Level 4, the highest guide-file level, with a <a href="/.well-known/assistant-guide-manifest.txt">sidecar manifest</a> and <a href="/.well-known/assistant-guide-transparency-log.txt">public hash anchor</a>, and can be checked at <a href="https://guidecheck.org/verify" target="_blank" rel="noopener">guidecheck.org/verify</a>.</p>
           <p style="margin-bottom:1.25rem">Before any import, rename, delete, restore, or reindex operation, close Camera Hub and make a PrompterKit backup.</p>
           <a href="/.well-known/assistant-guide.txt" class="btn btn-primary">Open the assistant guide</a>
+          <a href="/.well-known/assistant-guide-manifest.txt" class="btn btn-secondary" style="margin-left:.5rem">View evidence</a>
         </div>
         <div class="tab-panel" id="panel-terminal">
           <ol class="steps">

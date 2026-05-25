@@ -41,6 +41,9 @@ the highest guide-file level: strict byte profile, safety contract, action
 approval gates, sidecar manifest, public transparency-log anchor, and public
 repository hash anchor. It can be checked with the verifier at
 https://guidecheck.org/verify.
+Level 4 evidence is published alongside the guide:
+https://prompterkit.app/.well-known/assistant-guide-manifest.txt and
+https://prompterkit.app/.well-known/assistant-guide-transparency-log.txt.
 
 The short version: only use the official repository, ask the assistant to
 explain every command before running it, do not approve `sudo` or shell scripts

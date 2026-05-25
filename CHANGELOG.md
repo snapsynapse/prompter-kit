@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Assistant guide updated to GuideCheck profile 0.3.0 at conformance Level 4,
   with sidecar manifest, public transparency-log anchor, repository hash
   anchor, and root discovery copies.
+- README and site install copy now link directly to the GuideCheck Level 4
+  evidence files.
 
 ## [0.5.1] - 2026-05-21
 
