@@ -178,7 +178,8 @@ images, inline code, blockquotes, list bullets, and strikethrough are stripped.
 - Restore validation: before writing anything, `restore` checks that the zip
   contains a valid `AppSettings.json`, that every GUID matches `[A-Za-z0-9._-]+`,
   that no unexpected paths are present, and that each script's embedded GUID
-  matches the filename. Replace mode clears `Texts/` atomically before writing.
+  matches the filename. Replace mode stages replacement files before swapping
+  them into place and rolls back the live files if the swap fails.
 
 ## Data locations
 
@@ -196,7 +197,7 @@ path exists.
 python3 -m pytest tests/ -v
 ```
 
-105 tests cover import, export, push/pull aliases, CRUD, GUI routes, CSRF
+107 tests cover import, export, push/pull aliases, CRUD, GUI routes, CSRF
 protection, upload validation, backup/restore, Markdown stripping, atomic-write
 rollback, post-write verification, diagnostics, fixture compatibility,
 base-directory overrides, simulated overwrite failures, Camera Hub path

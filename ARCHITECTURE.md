@@ -95,8 +95,9 @@ Three layers protect the data directory:
 `restore` adds a validation pass before writing anything: the backup zip must
 contain a parseable `AppSettings.json`, every GUID must match
 `[A-Za-z0-9._-]+`, no unexpected paths may be present, and each script's
-embedded GUID must match its filename. Replace mode clears `Texts/`
-atomically before writing.
+embedded GUID must match its filename. Replace mode builds a staged `Texts/`
+directory first, swaps it into place, and restores the prior live files if the
+swap or verification fails.
 
 ## CLI and aliases
 

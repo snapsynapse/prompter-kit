@@ -3,6 +3,7 @@ import datetime
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -632,6 +633,7 @@ def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) 
     if not os.path.isfile(backup_path):
         raise FileNotFoundError(f"Backup file not found: '{backup_path}'")
 
+    os.makedirs(base_dir, exist_ok=True)
     texts_dir = os.path.join(base_dir, "Texts")
     os.makedirs(texts_dir, exist_ok=True)
     settings_path = os.path.join(base_dir, "AppSettings.json")
@@ -713,29 +715,58 @@ def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) 
                 )
         return written
 
+    stage_dir = tempfile.mkdtemp(dir=base_dir, prefix=".prompter_restore_")
+    stage_texts_dir = os.path.join(stage_dir, "Texts")
+    os.makedirs(stage_texts_dir, exist_ok=True)
+    stage_settings_path = os.path.join(stage_dir, "AppSettings.json")
     written = 0
-    for name in os.listdir(texts_dir):
-        if name.endswith(".json"):
-            os.unlink(os.path.join(texts_dir, name))
-
     for guid in validated_guids:
         if guid not in backup_scripts:
             continue
-        dest = os.path.join(texts_dir, f"{guid}.json")
+        dest = os.path.join(stage_texts_dir, f"{guid}.json")
         _atomic_write_json(dest, backup_scripts[guid])
         written += 1
 
     backup_settings[LIBRARY_KEY] = validated_guids
-    _atomic_write_json(settings_path, backup_settings)
-    for guid in validated_guids:
-        if guid in backup_scripts:
-            verify_script_registered(
-                guid,
-                expected_name=backup_scripts[guid].get("friendlyName"),
-                expected_chapters=backup_scripts[guid].get("chapters"),
-                expected_index=backup_scripts[guid].get("index"),
-                base_dir=base_dir,
-            )
+    _atomic_write_json(stage_settings_path, backup_settings)
+
+    old_texts_dir = os.path.join(stage_dir, "Texts.old")
+    old_settings_path = os.path.join(stage_dir, "AppSettings.old.json")
+    had_texts_dir = os.path.exists(texts_dir)
+    had_settings = os.path.exists(settings_path)
+    if had_settings:
+        shutil.copy2(settings_path, old_settings_path)
+
+    swapped_texts = False
+    try:
+        if had_texts_dir:
+            os.replace(texts_dir, old_texts_dir)
+        os.replace(stage_texts_dir, texts_dir)
+        swapped_texts = True
+        os.replace(stage_settings_path, settings_path)
+
+        for guid in validated_guids:
+            if guid in backup_scripts:
+                verify_script_registered(
+                    guid,
+                    expected_name=backup_scripts[guid].get("friendlyName"),
+                    expected_chapters=backup_scripts[guid].get("chapters"),
+                    expected_index=backup_scripts[guid].get("index"),
+                    base_dir=base_dir,
+                )
+    except Exception:
+        if swapped_texts and os.path.exists(texts_dir):
+            shutil.rmtree(texts_dir)
+        if had_texts_dir and os.path.exists(old_texts_dir):
+            os.replace(old_texts_dir, texts_dir)
+        if had_settings:
+            os.replace(old_settings_path, settings_path)
+        elif os.path.exists(settings_path):
+            os.unlink(settings_path)
+        raise
+    finally:
+        shutil.rmtree(stage_dir, ignore_errors=True)
+
     return written
 
 
@@ -893,10 +924,13 @@ def _cmd_import(args: argparse.Namespace) -> None:
         print("Error: --name must not be empty.", file=sys.stderr)
         sys.exit(1)
 
+    should_restart = False
     if getattr(args, "restart", False):
         print("Stopping Camera Hub...")
         camerahub_stop(wait=True)
+        should_restart = True
 
+    exit_code = 0
     try:
         script_path, settings_path = import_script(
             args.text_file,
@@ -909,11 +943,18 @@ def _cmd_import(args: argparse.Namespace) -> None:
         print("Verification:  passed")
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        exit_code = 1
+    finally:
+        if should_restart:
+            print("Starting Camera Hub...")
+            try:
+                camerahub_start()
+            except Exception as e:
+                print(f"Error starting Camera Hub: {e}", file=sys.stderr)
+                exit_code = 1
 
-    if getattr(args, "restart", False):
-        print("Starting Camera Hub...")
-        camerahub_start()
+    if exit_code:
+        sys.exit(exit_code)
 
 
 def _cmd_export(args: argparse.Namespace) -> None:

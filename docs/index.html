@@ -539,7 +539,7 @@
       <div class="pillar">
         <span class="icon" aria-hidden="true">🗄️</span>
         <h3>Back up your library</h3>
-        <p>The CLI archives every script to a zip file and restores the whole library after a Camera Hub update, a reinstall, or a move to a new computer.</p>
+        <p>The CLI archives every script to a zip file and restores the whole library after a Camera Hub update, a reinstall, or a move to a new computer. Replace-mode restore stages files first and rolls back the live library if the final swap fails.</p>
       </div>
       <div class="pillar">
         <span class="icon" aria-hidden="true">🌐</span>
@@ -634,7 +634,7 @@ python3 -m pip install -r requirements-gui.txt</pre>
       <li><code>restore backup.zip</code><span class="desc">Restore from a backup archive</span></li>
       <li><code>delete "Old Draft"</code><span class="desc">Remove a script by name</span></li>
       <li><code>rename "Draft" "Episode 42 Final"</code><span class="desc">Rename a script</span></li>
-      <li><code>import --restart script.txt --name "Live"</code><span class="desc">Auto-stop Camera Hub, import, restart</span></li>
+      <li><code>import --restart script.txt --name "Live"</code><span class="desc">Auto-stop Camera Hub, import, restart after success or failure</span></li>
     </ul>
   </div>
 </section>

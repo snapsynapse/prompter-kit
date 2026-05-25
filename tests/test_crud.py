@@ -6,6 +6,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+import prompter_kit
 from prompter_kit import (
     LIBRARY_KEY,
     backup,
@@ -343,6 +344,35 @@ def test_restore_replace_removes_stale_json_files(tmp_path):
 
     restore(archive, merge=False, base_dir=str(dst))
     assert not (dst / "Texts" / "STALE.json").exists()
+
+
+def test_restore_replace_rolls_back_when_settings_swap_fails(tmp_path, monkeypatch):
+    src = tmp_path / "src"
+    dst = tmp_path / "dst"
+    src.mkdir()
+    dst.mkdir()
+
+    _setup(src, [("NEW", "New", ["from backup"], 0)])
+    archive = str(tmp_path / "backup.zip")
+    backup(archive, base_dir=str(src))
+
+    _setup(dst, [("OLD", "Old", ["existing"], 0)])
+    settings_path = str(dst / "AppSettings.json")
+    original_replace = prompter_kit.os.replace
+
+    def failing_replace(src_path, dst_path):
+        if dst_path == settings_path:
+            raise OSError("simulated settings swap failure")
+        return original_replace(src_path, dst_path)
+
+    monkeypatch.setattr(prompter_kit.os, "replace", failing_replace)
+
+    with pytest.raises(OSError, match="settings swap failure"):
+        restore(archive, merge=False, base_dir=str(dst))
+
+    assert list_scripts(base_dir=str(dst))[0]["guid"] == "OLD"
+    assert load_script_json("OLD", base_dir=str(dst))["chapters"] == ["existing"]
+    assert not (dst / "Texts" / "NEW.json").exists()
 
 
 def test_restore_missing_appsettings_rejected(tmp_path):

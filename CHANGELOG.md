@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Replace-mode `restore` now stages replacement files before touching the live
+  library and rolls back the prior `Texts/` directory and `AppSettings.json` if
+  the final swap or verification fails.
+- `import --restart` and `push --restart` now attempt to restart Camera Hub
+  after a successful stop even when the import fails.
+
 ## [0.5.1] - 2026-05-21
 
 ### Added
@@ -64,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `restore` now validates backup zips before writing: checks for missing or
   malformed `AppSettings.json`, duplicate archive paths, GUID format (alphanumeric
   plus `.`, `_`, `-` only), unexpected files, and GUID cross-checks between
-  metadata and script JSON. Replace mode also cleans `Texts/` atomically.
+  metadata and script JSON.
 - Export filename collision logic extracted into `_unique_text_filename` helper,
   shared between the CLI `export --all` path and the GUI zip-export path.
 - 8 new tests (79 total).

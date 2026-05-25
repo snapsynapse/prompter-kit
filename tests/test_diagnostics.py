@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -280,6 +281,34 @@ def test_import_rolls_back_when_appsettings_atomic_write_fails(tmp_path, monkeyp
     with pytest.raises(OSError, match="Could not write AppSettings"):
         import_script(str(source), "Atomic Failure", 0, base_dir=str(tmp_path))
     assert list((tmp_path / "Texts").glob("*.json")) == []
+
+
+def test_cli_import_restart_runs_after_failed_import(tmp_path, monkeypatch):
+    source = tmp_path / "source.txt"
+    source.write_text("line\n", encoding="utf-8")
+    calls = []
+
+    monkeypatch.setattr(prompter_kit, "camerahub_stop", lambda wait=False: calls.append(("stop", wait)))
+    monkeypatch.setattr(prompter_kit, "camerahub_start", lambda: calls.append(("start", None)))
+
+    def failing_import(*args, **kwargs):
+        raise RuntimeError("simulated import failure")
+
+    monkeypatch.setattr(prompter_kit, "import_script", failing_import)
+
+    args = SimpleNamespace(
+        text_file=str(source),
+        name="Will Fail",
+        index=0,
+        base_dir=str(tmp_path),
+        restart=True,
+    )
+
+    with pytest.raises(SystemExit) as exit_info:
+        prompter_kit._cmd_import(args)
+
+    assert exit_info.value.code == 1
+    assert calls == [("stop", True), ("start", None)]
 
 
 def test_cli_base_dir_works_for_mutating_commands_and_backup_restore(tmp_path):
