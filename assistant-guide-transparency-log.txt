@@ -1,0 +1,5 @@
+canonical-url: https://prompterkit.app/.well-known/assistant-guide.txt
+guide-version: 1.2.0
+guide-sha256: 02d70044c660b23cebfd1040853b4c9b618805bdea2ccafeb76400c9ecbf5127
+logged-at: 2026-05-25T01:45:00Z
+log-note: Public git tag guidecheck-1.2.0 anchors this GuideCheck guide hash.

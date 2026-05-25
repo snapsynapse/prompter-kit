@@ -4,7 +4,7 @@ Assistant Guide: PrompterKit local install
 identifier: assistant-guide
 profile: human-verifiable-assistant-guide
 profile-version: 0.3.0
-guide-version: 1.1.0
+guide-version: 1.2.0
 applies-to: prompterkit >=0.5.0, <0.6.0
 canonical-url: https://prompterkit.app/.well-known/assistant-guide.txt
 repository-url: https://github.com/snapsynapse/prompter-kit
@@ -121,8 +121,8 @@ notes: Installs Flask for the web GUI. Only needed for GUI use.
 
 [action]
 id: run-doctor
-class: normal
-approval: not-required
+class: code-executing
+approval: required
 command: .venv/bin/python prompter_kit.py doctor
 runner: argv
 cwd: prompter-kit
@@ -131,7 +131,7 @@ notes: Runs the built-in environment self-check. Read-only.
 
 [action]
 id: backup-camera-hub
-class: data-accessing, persistence-changing
+class: data-accessing, persistence-changing, code-executing
 approval: required
 command: .venv/bin/python prompter_kit.py backup --output prompterkit-backup.zip
 runner: argv
