@@ -1,0 +1,5 @@
+guide-path: /.well-known/assistant-guide.txt
+guide-version: 1.1.0
+guide-sha256: 4fb646ac016bd580c3f643a7deb985c7cbc3d0979a65d2f7a9903c1537ad7b6e
+guide-bytes: 7371
+immutable-release-url: https://github.com/snapsynapse/prompter-kit/tree/guidecheck-1.1.0

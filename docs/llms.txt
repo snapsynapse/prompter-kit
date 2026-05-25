@@ -21,7 +21,8 @@ PrompterKit wraps the Elgato Camera Hub data format (AppSettings.json + Texts/*.
 - [prompter_kit_gui.py](https://github.com/snapsynapse/prompter-kit/blob/main/prompter_kit_gui.py) — Flask web GUI
 - [CHANGELOG.md](https://github.com/snapsynapse/prompter-kit/blob/main/CHANGELOG.md) — version history
 - [README.md](https://github.com/snapsynapse/prompter-kit/blob/main/README.md) — setup and usage
-- [Assistant guide](https://prompterkit.app/.well-known/assistant-guide.txt): GuideCheck-conformant (Level 3) plain-text guide and approval checklist for installing with ChatGPT, Claude, Codex, or another local coding assistant
+- [Assistant guide](https://prompterkit.app/.well-known/assistant-guide.txt): GuideCheck-conformant (Level 4) plain-text guide, manifest, repository hash anchor, and approval checklist for installing with ChatGPT, Claude, Codex, or another local coding assistant
+- [Assistant guide manifest](https://prompterkit.app/.well-known/assistant-guide-manifest.txt): GuideCheck Level 4 sidecar manifest for the assistant guide
 
 ## Install safety for AI assistants
 

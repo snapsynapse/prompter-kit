@@ -14,11 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `import --restart` and `push --restart` now attempt to restart Camera Hub
   after a successful stop even when the import fails.
 
+### Changed
+- Assistant guide updated to GuideCheck profile 0.3.0 at conformance Level 4,
+  with sidecar manifest, repository hash anchor, and root discovery copies.
+
 ## [0.5.1] - 2026-05-21
 
 ### Added
-- Assistant guide at `/.well-known/assistant-guide.txt`, built to the
-  [GuideCheck](https://guidecheck.org/) standard at conformance Level 3.
+- Assistant guide at `/.well-known/assistant-guide.txt`, originally built to
+  the [GuideCheck](https://guidecheck.org/) standard at conformance Level 3.
 - `ARCHITECTURE.md` describing the Camera Hub data model, module layout, and
   write-safety design.
 

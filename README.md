@@ -36,8 +36,9 @@ at a time.
 
 That guide follows the [GuideCheck](https://guidecheck.org/) standard, a
 plain-text, strict-ASCII format that keeps what a human reviews identical to
-what an assistant executes. It is built to GuideCheck conformance Level 3
-(safety contract, required sections, explicit approval gates) and can be
+what an assistant executes. It is built to GuideCheck conformance Level 4,
+the highest guide-file level: strict byte profile, safety contract, action
+approval gates, sidecar manifest, and public repository hash anchor. It can be
 checked with the verifier at https://guidecheck.org/verify.
 
 The short version: only use the official repository, ask the assistant to
