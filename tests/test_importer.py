@@ -50,19 +50,35 @@ def _register_guid(tmp_path, guid):
 # convert_text_file
 # ---------------------------------------------------------------------------
 
-def test_convert_text_file_basic(tmp_path):
+def test_convert_text_file_soft_returns_stay_in_one_chapter(tmp_path):
+    # Single newlines are soft returns: they stay inside one chapter as
+    # embedded line breaks, not separate scroll points.
     f = tmp_path / "script.txt"
     f.write_text("Line one\nLine two\nLine three\n", encoding="utf-8")
-    assert convert_text_file(str(f)) == ["Line one", "Line two", "Line three"]
+    assert convert_text_file(str(f)) == ["Line one\nLine two\nLine three"]
+
+
+def test_convert_text_file_hard_returns_split_chapters(tmp_path):
+    # A blank line is a hard return: it ends a chapter and starts a new one.
+    f = tmp_path / "script.txt"
+    f.write_text("Chapter one\n\nChapter two\n", encoding="utf-8")
+    assert convert_text_file(str(f)) == ["Chapter one", "Chapter two"]
+
+
+def test_convert_text_file_mixed_soft_and_hard(tmp_path):
+    f = tmp_path / "script.txt"
+    f.write_text("a1\na2\n\nb1\nb2\nb3\n", encoding="utf-8")
+    assert convert_text_file(str(f)) == ["a1\na2", "b1\nb2\nb3"]
 
 
 def test_convert_text_file_strips_whitespace(tmp_path):
     f = tmp_path / "script.txt"
     f.write_text("  hello  \n  world  \n", encoding="utf-8")
-    assert convert_text_file(str(f)) == ["hello", "world"]
+    assert convert_text_file(str(f)) == ["hello\nworld"]
 
 
-def test_convert_text_file_skips_blank_lines(tmp_path):
+def test_convert_text_file_collapses_multiple_blank_lines(tmp_path):
+    # Two or more blank lines still mark a single chapter boundary.
     f = tmp_path / "script.txt"
     f.write_text("a\n\n\nb\n", encoding="utf-8")
     assert convert_text_file(str(f)) == ["a", "b"]
@@ -164,7 +180,7 @@ def test_update_appsettings_repairs_non_list_key(tmp_path):
 
 def test_import_script_end_to_end(tmp_path):
     script_file = tmp_path / "script.txt"
-    script_file.write_text("Chapter one\nChapter two\n")
+    script_file.write_text("Chapter one\n\nChapter two\n")
     script_path, settings_path = import_script(
         str(script_file), "My Show", 0, base_dir=str(tmp_path)
     )
@@ -273,7 +289,23 @@ def test_export_script_writes_chapters(tmp_path):
     out = tmp_path / "out.txt"
     export_script("GUID-EX", str(out), base_dir=str(tmp_path))
     content = out.read_text(encoding="utf-8")
-    assert content == "First line\nSecond line\n"
+    # Chapters are separated by a blank line (hard return) on export.
+    assert content == "First line\n\nSecond line\n"
+
+
+def test_export_script_preserves_soft_breaks(tmp_path):
+    _make_script(tmp_path, "GUID-SB", "Soft", ["one\ntwo", "three"])
+    out = tmp_path / "out.txt"
+    export_script("GUID-SB", str(out), base_dir=str(tmp_path))
+    assert out.read_text(encoding="utf-8") == "one\ntwo\n\nthree\n"
+
+
+def test_export_then_import_round_trips_chapters(tmp_path):
+    chapters = ["soft one\nsoft two", "second chapter", "third\nwith break"]
+    _make_script(tmp_path, "GUID-RT", "Round", chapters)
+    out = tmp_path / "out.txt"
+    export_script("GUID-RT", str(out), base_dir=str(tmp_path))
+    assert convert_text_file(str(out)) == chapters
 
 
 def test_export_script_creates_parent_dirs(tmp_path):
@@ -392,8 +424,8 @@ def test_strip_markdown_mixed():
 
 def test_convert_text_file_strips_markdown(tmp_path):
     f = tmp_path / "script.md"
-    f.write_text("# Act One\n**Bold line**\nPlain line\n", encoding="utf-8")
-    assert convert_text_file(str(f)) == ["Act One", "Bold line", "Plain line"]
+    f.write_text("# Act One\n\n**Bold line**\nPlain line\n", encoding="utf-8")
+    assert convert_text_file(str(f)) == ["Act One", "Bold line\nPlain line"]
 
 
 def test_convert_text_file_horizontal_rule_skipped(tmp_path):

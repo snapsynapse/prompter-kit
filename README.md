@@ -88,7 +88,7 @@ Prefer the terminal? After setting up the virtual environment (see Terminal
 Install above), every action is also a one-liner:
 
 ```
-# Import a .txt or .md file (one line per chapter)
+# Import a .txt or .md file (blank line = new chapter, single newline = soft break)
 python3 prompter_kit.py import script.md --name "My Script"
 
 # Import and auto-restart Camera Hub around the write
@@ -160,17 +160,26 @@ a copied Camera Hub directory before touching the live device data.
 
 ## Script format
 
-Plain `.txt` or `.md`. Each non-empty line becomes one chapter.
+Plain `.txt` or `.md`. A chapter is one Camera Hub scroll/save point. Returns
+map to chapters the way you would expect from a teleprompter:
+
+- A blank line is a hard return: it ends the current chapter and starts a new
+  one (a new scroll/save point).
+- A single newline is a soft return: it stays inside the chapter as a line
+  break, with no new scroll point.
 
 ```markdown
-# Act One
+Welcome to the show.
+Tonight we cover three topics.
 
-- Welcome to the show.
-- **Tonight** we cover three topics.
+Topic one is the easy one.
 ```
 
-imports as three plain chapters. Markdown headings, bold, italic, links,
+imports as two chapters. The first keeps both lines together as soft breaks;
+the blank line starts the second. Markdown headings, bold, italic, links,
 images, inline code, blockquotes, list bullets, and strikethrough are stripped.
+Export and `edit` use the same convention, so a script round-trips: a blank
+line between chapters, soft breaks preserved within each.
 
 ## Safety
 

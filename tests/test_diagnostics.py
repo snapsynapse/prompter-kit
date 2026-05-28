@@ -158,7 +158,7 @@ def test_fixture_camera_hub_data_lists_exports_and_preserves_unknown_fields(tmp_
 
     exported = tmp_path / "alpha.txt"
     export_script("FIXTURE-ALPHA", str(exported), base_dir=str(tmp_path))
-    assert exported.read_text(encoding="utf-8") == "Alpha line one\nAlpha line two\n"
+    assert exported.read_text(encoding="utf-8") == "Alpha line one\n\nAlpha line two\n"
 
     prompter_kit.rename_script("FIXTURE-ALPHA", "Fixture Alpha Renamed", base_dir=str(tmp_path))
     data = json.loads((tmp_path / "Texts" / "FIXTURE-ALPHA.json").read_text(encoding="utf-8"))
@@ -168,7 +168,7 @@ def test_fixture_camera_hub_data_lists_exports_and_preserves_unknown_fields(tmp_
 
 def test_import_export_delete_round_trip_with_base_dir(tmp_path):
     source = tmp_path / "source.txt"
-    source.write_text("One\nTwo\n", encoding="utf-8")
+    source.write_text("One\n\nTwo\n", encoding="utf-8")
 
     script_path, _ = import_script(str(source), "Round Trip", 3, base_dir=str(tmp_path))
     guid = json.loads(open(script_path, encoding="utf-8").read())["GUID"]
@@ -182,7 +182,7 @@ def test_import_export_delete_round_trip_with_base_dir(tmp_path):
 
     out = tmp_path / "pulled.txt"
     export_script(guid, str(out), base_dir=str(tmp_path))
-    assert out.read_text(encoding="utf-8") == "One\nTwo\n"
+    assert out.read_text(encoding="utf-8") == "One\n\nTwo\n"
 
     prompter_kit.delete_script(guid, base_dir=str(tmp_path))
     assert list_scripts(base_dir=str(tmp_path)) == []

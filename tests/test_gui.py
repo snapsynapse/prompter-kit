@@ -110,7 +110,7 @@ def test_import_uses_configured_base_dir(configured_client):
             client,
             name="GUI Import",
             index="2",
-            file=(io.BytesIO(b"One\nTwo\n"), "script.txt"),
+            file=(io.BytesIO(b"One\n\nTwo\n"), "script.txt"),
         ),
         content_type="multipart/form-data",
         follow_redirects=True,

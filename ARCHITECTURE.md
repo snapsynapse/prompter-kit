@@ -37,8 +37,10 @@ Two kinds of file matter:
 
 - `AppSettings.json` — the registry. Each script has a GUID, an index that
   sets library order, and a friendly name.
-- `Texts/<GUID>.json` — per-script content. Each chapter is one entry; on
-  import, each non-empty input line becomes one chapter.
+- `Texts/<GUID>.json` — per-script content. Each chapter is one entry and one
+  Camera Hub scroll/save point. On import, a blank line (hard return) starts a
+  new chapter and a single newline (soft return) is kept as a line break inside
+  the chapter, matching how Camera Hub itself stores embedded newlines.
 
 A script exists only when both its registry entry and its `Texts/` file are
 present and their GUIDs agree. Most write operations touch both files, which
@@ -57,7 +59,10 @@ Grouped by responsibility:
   `update_appsettings`.
 - Verification: `verify_script_registered`, `verify_script_absent`. Called
   after writes to confirm the expected change is visible on disk.
-- Conversion: `strip_markdown`, `convert_text_file`, `generate_json_data`.
+- Conversion: `strip_markdown`, `group_into_chapters`, `chapters_to_text`,
+  `convert_text_file`, `generate_json_data`. `group_into_chapters` and
+  `chapters_to_text` are inverses over the blank-line chapter convention, so
+  import, export, and `edit` all round-trip through one definition.
 - Core operations: `import_script`, `list_scripts`, `export_script`,
   `export_all`, `delete_script`, `rename_script`, `reindex_scripts`,
   `edit_script`, `backup`, `restore`.

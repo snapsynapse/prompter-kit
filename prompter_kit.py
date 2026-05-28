@@ -206,15 +206,51 @@ def strip_markdown(text: str) -> str:
 # Import pipeline
 # ---------------------------------------------------------------------------
 
+def group_into_chapters(text: str, *, strip_md: bool) -> list[str]:
+    """Group plain text into chapters.
+
+    A chapter is one Camera Hub scroll/save point. A blank line is a hard
+    return: it ends the current chapter and starts a new one. A single newline
+    is a soft return: it stays inside the chapter as an embedded line break,
+    which Camera Hub renders without adding a scroll point. When ``strip_md`` is
+    set, each line is run through ``strip_markdown`` first; a line that reduces
+    to nothing (a horizontal rule, a bare heading marker) also ends a chapter.
+    """
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    chapters: list[str] = []
+    current: list[str] = []
+
+    for raw_line in text.split("\n"):
+        content = strip_markdown(raw_line) if strip_md else raw_line.rstrip()
+        if not content.strip():
+            if current:
+                chapters.append("\n".join(current))
+                current = []
+            continue
+        current.append(content)
+
+    if current:
+        chapters.append("\n".join(current))
+
+    return chapters
+
+
+def chapters_to_text(chapters: list[str]) -> str:
+    """Render chapters back to plain text: a blank line between each chapter
+    (hard return), soft line breaks preserved inside. Inverse of
+    ``group_into_chapters`` for any text this tool produced."""
+    return "\n\n".join(chapters)
+
+
 def convert_text_file(file_path: str) -> list[str]:
-    """Read a plain text or Markdown file; return non-empty lines as chapters."""
+    """Read a plain text or Markdown file and group it into chapters."""
     try:
         with open(file_path, "r", encoding="utf-8") as f:
-            raw_lines = f.readlines()
+            raw_text = f.read()
     except OSError as e:
         raise OSError(f"Could not read '{file_path}': {e}") from e
 
-    chapters = [stripped for line in raw_lines if (stripped := strip_markdown(line))]
+    chapters = group_into_chapters(raw_text, strip_md=True)
 
     if not chapters:
         raise ValueError(f"'{file_path}' contains no text after stripping whitespace")
@@ -354,7 +390,8 @@ def load_script_json(guid_str: str, base_dir: str | None = None) -> dict:
 
 def export_script(guid_str: str, output_path: str, base_dir: str | None = None) -> str:
     """
-    Export a single script to a plain-text file (one chapter per line).
+    Export a single script to a plain-text file. Chapters are separated by a
+    blank line; soft line breaks within a chapter are preserved.
     Returns the output path written.
     """
     data = load_script_json(guid_str, base_dir)
@@ -368,7 +405,7 @@ def export_script(guid_str: str, output_path: str, base_dir: str | None = None) 
 
     try:
         with open(output_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(chapters) + "\n")
+            f.write(chapters_to_text(chapters) + "\n")
     except OSError as e:
         raise OSError(f"Could not write to '{output_path}': {e}") from e
 
@@ -534,7 +571,8 @@ def reindex_scripts(ordered_names_or_guids: list[str] | None = None, base_dir: s
 
 def edit_script(name_or_guid: str, base_dir: str | None = None) -> str:
     """
-    Open a script's chapters in $EDITOR (one chapter per line).
+    Open a script's chapters in $EDITOR, one chapter per block with a blank
+    line between chapters and soft line breaks preserved inside each.
     Saves the updated chapters back to the script JSON on exit.
     Returns the GUID edited.
     """
@@ -554,21 +592,21 @@ def edit_script(name_or_guid: str, base_dir: str | None = None) -> str:
     fd, tmp_path = tempfile.mkstemp(suffix=".txt")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write("\n".join(chapters) + ("\n" if chapters else ""))
+            f.write(chapters_to_text(chapters) + ("\n" if chapters else ""))
 
         result = subprocess.run([editor, tmp_path])
         if result.returncode != 0:
             raise RuntimeError(f"Editor exited with code {result.returncode}")
 
         with open(tmp_path, "r", encoding="utf-8") as f:
-            raw_lines = f.readlines()
+            raw_text = f.read()
     finally:
         try:
             os.unlink(tmp_path)
         except OSError:
             pass
 
-    new_chapters = [line.rstrip("\n\r") for line in raw_lines if line.strip()]
+    new_chapters = group_into_chapters(raw_text, strip_md=False)
     if not new_chapters:
         raise ValueError("Editor produced no content; script not updated")
 

@@ -6,8 +6,8 @@ PrompterKit wraps the Elgato Camera Hub data format (AppSettings.json + Texts/*.
 
 ## Key concepts
 
-- **Import**: reads any .txt or .md file, strips Markdown formatting, converts each line to a Camera Hub chapter, registers the script in AppSettings.json
-- **Export**: writes chapter content back to a plain text file (one chapter per line)
+- **Import**: reads any .txt or .md file, strips Markdown formatting, groups it into Camera Hub chapters (a blank line is a hard return that starts a new chapter/scroll point; a single newline is a soft return kept as a line break inside the chapter), registers the script in AppSettings.json
+- **Export**: writes chapter content back to a plain text file, chapters separated by a blank line and soft breaks preserved, so a script round-trips
 - **Backup**: archives all registered script JSON files plus AppSettings.json to a timestamped zip
 - **Restore**: validates a backup zip, then restores it in merge or replace mode; replace mode stages replacement files first and rolls back the live library if the final swap fails
 - **CRUD**: delete, rename, and reindex scripts without opening Camera Hub

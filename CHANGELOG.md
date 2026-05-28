@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-28
+
+### Changed
+- Import now distinguishes soft returns from hard returns. A blank line is a
+  hard return that starts a new chapter (a new Camera Hub scroll/save point); a
+  single newline is a soft return kept as a line break inside the chapter. This
+  matches how Camera Hub itself stores embedded newlines. Previously every line
+  became its own chapter and blank lines were discarded.
+- Export and `edit` use the same convention: chapters are separated by a blank
+  line and soft breaks are preserved, so a script round-trips through export
+  and re-import without losing structure.
+
+### Added
+- `group_into_chapters` and `chapters_to_text` helpers in `prompter_kit.py`,
+  the single source of truth for the chapter/return convention shared by
+  import, export, and `edit`.
+
+### Note
+- A chapter that itself contains a blank line (only possible from manual Camera
+  Hub authoring) will split into two chapters if exported to text and
+  re-imported, since flat text uses the blank line as the chapter boundary.
+
+## [0.5.2] - 2026-05-28
+
+### Added
+- Site landing page now has an Instructions section above the optional CLI
+  commands, walking through how to start and use PrompterKit after install,
+  with a matching nav link.
+- Site landing page now has a Troubleshooting section covering common launch
+  failures (wrong directory, missing Flask, Python version, port in use, and
+  Camera Hub not reflecting changes), with a matching nav link.
+
 ### Fixed
 - Replace-mode `restore` now stages replacement files before touching the live
   library and rolls back the prior `Texts/` directory and `AppSettings.json` if

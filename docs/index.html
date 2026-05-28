@@ -305,6 +305,32 @@
     }
     .cmd-list .desc { color: var(--text-muted); }
 
+    /* Troubleshooting */
+    .trouble {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin: 1.5rem 0 0;
+    }
+    .trouble li {
+      padding: 1rem 1.25rem;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .trouble strong { color: var(--text); display: block; margin-bottom: 0.35rem; }
+    .trouble code {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--accent);
+      background: var(--code-bg);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+
     /* Buttons */
     .cta-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
     .btn {
@@ -425,6 +451,21 @@
       outline: 3px solid var(--accent);
       outline-offset: 2px;
     }
+    #tab-instructions:checked ~ .tab-labels label[for="tab-instructions"],
+    #tab-cli:checked ~ .tab-labels label[for="tab-cli"],
+    #tab-trouble:checked ~ .tab-labels label[for="tab-trouble"] {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    #tab-instructions:checked ~ .tab-panels #panel-instructions,
+    #tab-cli:checked ~ .tab-panels #panel-cli,
+    #tab-trouble:checked ~ .tab-panels #panel-trouble { display: block; }
+    #tab-instructions:focus-visible ~ .tab-labels label[for="tab-instructions"],
+    #tab-cli:focus-visible ~ .tab-labels label[for="tab-cli"],
+    #tab-trouble:focus-visible ~ .tab-labels label[for="tab-trouble"] {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
 
     /* Feature table */
     table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
@@ -493,6 +534,7 @@
     <div class="links mobile-compact">
       <a href="#features">Features</a>
       <a href="#install">Install</a>
+      <a href="#usage">Usage</a>
       <a href="https://github.com/snapsynapse/prompter-kit" class="gh-star" target="_blank" rel="noopener" aria-label="Star snapsynapse/prompter-kit on GitHub">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
           <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/>
@@ -535,7 +577,7 @@
       <div class="pillar">
         <span class="icon" aria-hidden="true">📄</span>
         <h3>Import any text file</h3>
-        <p>Drop a .txt or Markdown file onto the page. PrompterKit converts each line into a chapter and registers it with Camera Hub instantly &mdash; no copy-paste required.</p>
+        <p>Drop a .txt or Markdown file onto the page. PrompterKit groups it into chapters (a blank line starts a new scroll point, a single line break stays inside one) and registers it with Camera Hub instantly. No copy-paste required.</p>
       </div>
       <div class="pillar">
         <span class="icon" aria-hidden="true">🗄️</span>
@@ -625,23 +667,100 @@ python3 -m pip install -r requirements-gui.txt</pre>
   </div>
 </section>
 
-<section id="cli">
+<section class="alt" id="usage">
   <div class="container">
-    <h2>CLI commands (optional)</h2>
-    <p>Prefer the terminal? Every action is also a one-liner.</p>
-    <ul class="cmd-list">
-      <li><code>import script.txt --name "Episode 42"</code><span class="desc">Import a text file as a new script</span></li>
-      <li><code>export --list</code><span class="desc">See all registered scripts</span></li>
-      <li><code>backup</code><span class="desc">Archive your whole library to a zip</span></li>
-      <li><code>restore backup.zip</code><span class="desc">Restore from a backup archive</span></li>
-      <li><code>delete "Old Draft"</code><span class="desc">Remove a script by name</span></li>
-      <li><code>rename "Draft" "Episode 42 Final"</code><span class="desc">Rename a script</span></li>
-      <li><code>import --restart script.txt --name "Live"</code><span class="desc">Auto-stop Camera Hub, import, restart after success or failure</span></li>
-    </ul>
+    <h2>Using PrompterKit</h2>
+    <div class="tabs">
+      <input type="radio" name="usage-tab" id="tab-instructions" class="tab-input" checked aria-label="Instructions">
+      <input type="radio" name="usage-tab" id="tab-cli" class="tab-input" aria-label="CLI commands">
+      <input type="radio" name="usage-tab" id="tab-trouble" class="tab-input" aria-label="Troubleshooting">
+      <div class="tab-labels">
+        <label for="tab-instructions" class="tab-label">Instructions</label>
+        <label for="tab-cli" class="tab-label">CLI commands</label>
+        <label for="tab-trouble" class="tab-label">Troubleshooting</label>
+      </div>
+      <div class="tab-panels">
+        <div class="tab-panel" id="panel-instructions">
+          <p>Once PrompterKit is installed, here is how to start it and manage your library day to day.</p>
+          <ol class="steps">
+            <li>
+              <div>
+                <strong>Quit Camera Hub first</strong>
+                PrompterKit and Camera Hub share the same local script files. Close Camera Hub before launching so the two never write at the same time.
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Start the app</strong>
+                Activate your environment, then run the GUI. Your browser opens automatically at <code>http://127.0.0.1:5000</code>.
+                <pre>source .venv/bin/activate
+python3 prompter_kit_gui.py</pre>
+                <p style="margin-top:0.5rem">On Windows, activate with <code>.venv\Scripts\activate</code></p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Import and organize your scripts</strong>
+                Drop in any <code>.txt</code> or Markdown file to add a script, then rename, reorder, or delete entries from the library list. The index stays normalized so Camera Hub reads the library cleanly.
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Back up your library</strong>
+                Run a backup to archive every script to a zip. Keep it somewhere safe so a Camera Hub reinstall or a new computer never costs you your scripts.
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Stop the server and reopen Camera Hub</strong>
+                When you are done, press <code>Ctrl+C</code> in the terminal to stop PrompterKit, then reopen Camera Hub to record with your updated library.
+              </div>
+            </li>
+          </ol>
+        </div>
+        <div class="tab-panel" id="panel-cli">
+          <p>Prefer the terminal? Every action is also a one-liner. The CLI is optional; the GUI covers daily use.</p>
+          <ul class="cmd-list">
+            <li><code>import script.txt --name "Episode 42"</code><span class="desc">Import a text file as a new script</span></li>
+            <li><code>export --list</code><span class="desc">See all registered scripts</span></li>
+            <li><code>backup</code><span class="desc">Archive your whole library to a zip</span></li>
+            <li><code>restore backup.zip</code><span class="desc">Restore from a backup archive</span></li>
+            <li><code>delete "Old Draft"</code><span class="desc">Remove a script by name</span></li>
+            <li><code>rename "Draft" "Episode 42 Final"</code><span class="desc">Rename a script</span></li>
+            <li><code>import --restart script.txt --name "Live"</code><span class="desc">Auto-stop Camera Hub, import, restart after success or failure</span></li>
+          </ul>
+        </div>
+        <div class="tab-panel" id="panel-trouble">
+          <p>If the launch command does not work, one of these is usually why.</p>
+          <ul class="trouble">
+            <li>
+              <strong>"can't open file '.../prompter_kit_gui.py': No such file or directory"</strong>
+              You are not inside the project folder. The clone created a <code>prompter-kit</code> directory; move into it before launching: <code>cd prompter-kit</code>, then run <code>python3 prompter_kit_gui.py</code>. Run <code>ls</code> first and confirm you see <code>prompter_kit_gui.py</code> in the listing.
+            </li>
+            <li>
+              <strong>"No module named 'flask'"</strong>
+              The virtual environment is not active, or dependencies were never installed. Activate it with <code>source .venv/bin/activate</code> (<code>.venv\Scripts\activate</code> on Windows), then run <code>python3 -m pip install -r requirements-gui.txt</code>.
+            </li>
+            <li>
+              <strong>"command not found: python3" or a version below 3.10</strong>
+              PrompterKit needs Python 3.10 or later. Check with <code>python3 --version</code> and install from <a href="https://python.org" target="_blank" rel="noopener">python.org</a> if it is missing or too old.
+            </li>
+            <li>
+              <strong>"Address already in use" on port 5000</strong>
+              PrompterKit is probably already running in another terminal or browser tab. Close the other instance, or stop it with <code>Ctrl+C</code>, then launch again. On macOS, AirPlay Receiver can also hold port 5000, so disable it in System Settings if needed.
+            </li>
+            <li>
+              <strong>Changes do not show up in Camera Hub</strong>
+              Camera Hub reads the library only at startup. Quit Camera Hub before editing in PrompterKit, and reopen it afterward so it picks up the updated scripts.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<section class="alt" id="about">
+<section id="about">
   <div class="container">
     <div style="max-width:680px;margin:0 auto;text-align:center">
       <h2>Free and open source</h2>
@@ -656,7 +775,7 @@ python3 -m pip install -r requirements-gui.txt</pre>
         <strong>Canonical reference.</strong> This page is the authoritative home for PrompterKit.
         Any discussion on YouTube creator forums, Reddit, or social media should link to
         <a href="https://prompterkit.app/">prompterkit.app</a> as the source.
-        Last updated: <time id="canonical-updated-date" datetime="2026-04-19">2026-04-19</time>.
+        Last updated: <time id="canonical-updated-date" datetime="2026-05-28">2026-05-28</time>.
         <a href="https://github.com/snapsynapse/prompter-kit/commits/main/CHANGELOG.md" target="_blank" rel="noopener">Revision history &rarr;</a>
       </aside>
     </div>
