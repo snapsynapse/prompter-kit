@@ -24,6 +24,7 @@ from flask import (
 
 from prompter_kit import (
     _unique_text_filename,
+    chapters_to_text,
     delete_script,
     import_script,
     list_scripts,
@@ -428,7 +429,7 @@ def do_export(guid):
         if not chapters:
             flash("Script has no chapters to export.", "error")
             return redirect(url_for("index"))
-        content = "\n".join(chapters) + "\n"
+        content = chapters_to_text(chapters) + "\n"
         name = data.get("friendlyName") or guid
         safe_name = "".join(c if c.isalnum() or c in "-_ " else "_" for c in name).strip() or guid
         return send_file(
@@ -456,7 +457,7 @@ def do_export_all():
                 chapters = data.get("chapters", [])
                 if not chapters:
                     continue
-                content = "\n".join(chapters) + "\n"
+                content = chapters_to_text(chapters) + "\n"
                 arc_name = _unique_text_filename(s["friendlyName"], s["guid"], used_names)
                 zf.writestr(arc_name, content.encode("utf-8"))
         buf.seek(0)

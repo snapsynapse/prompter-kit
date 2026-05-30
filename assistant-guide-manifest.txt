@@ -1,6 +1,6 @@
 guide-path: /.well-known/assistant-guide.txt
-guide-version: 1.2.0
-guide-sha256: 02d70044c660b23cebfd1040853b4c9b618805bdea2ccafeb76400c9ecbf5127
+guide-version: 1.2.1
+guide-sha256: 5694a7acd8ca2572d4204103823d2b4f90cca97dca35bd45d87cb2d57f966bd1
 guide-bytes: 7391
-immutable-release-url: https://github.com/snapsynapse/prompter-kit/tree/guidecheck-1.2.0
-transparency-log-url: https://raw.githubusercontent.com/snapsynapse/prompter-kit/guidecheck-1.2.0/assistant-guide-transparency-log.txt
+immutable-release-url: pending-v0.6.1-release
+transparency-log-url: https://prompterkit.app/.well-known/assistant-guide-transparency-log.txt

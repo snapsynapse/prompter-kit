@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-05-29
+
+### Fixed
+- GUI single-script export and export-all now use the same `chapters_to_text`
+  helper as the CLI, preserving blank-line chapter boundaries and soft returns
+  in exported text.
+
+### Changed
+- Assistant guide metadata, security policy, and site modified dates now reflect
+  the 0.6.1 release.
+
 ## [0.6.0] - 2026-05-28
 
 ### Changed

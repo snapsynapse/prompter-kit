@@ -61,8 +61,8 @@ def test_export_all_uses_unique_names_for_duplicate_friendly_names(client, monke
         ],
     )
     payloads = {
-        "GUID-ONE": {"chapters": ["one"]},
-        "GUID-TWO": {"chapters": ["two"]},
+        "GUID-ONE": {"chapters": ["one", "two"]},
+        "GUID-TWO": {"chapters": ["line one\nline two"]},
     }
     monkeypatch.setattr(prompter_kit_gui, "load_script_json", lambda guid, base_dir=None: payloads[guid])
 
@@ -72,8 +72,8 @@ def test_export_all_uses_unique_names_for_duplicate_friendly_names(client, monke
     archive = io.BytesIO(response.data)
     with zipfile.ZipFile(archive) as zf:
         assert sorted(zf.namelist()) == ["Same_Name.txt", "Same_Name_GUID-TWO.txt"]
-        assert zf.read("Same_Name.txt").decode("utf-8") == "one\n"
-        assert zf.read("Same_Name_GUID-TWO.txt").decode("utf-8") == "two\n"
+        assert zf.read("Same_Name.txt").decode("utf-8") == "one\n\ntwo\n"
+        assert zf.read("Same_Name_GUID-TWO.txt").decode("utf-8") == "line one\nline two\n"
 
 
 def test_export_all_skips_missing_and_empty_scripts(client, monkeypatch):
@@ -211,8 +211,18 @@ def test_export_uses_configured_base_dir(configured_client):
     response = client.get("/export/GUID-ONE")
 
     assert response.status_code == 200
-    assert response.data == b"one\ntwo\n"
+    assert response.data == b"one\n\ntwo\n"
     assert response.headers["Content-Disposition"].startswith("attachment;")
+
+
+def test_export_preserves_soft_breaks(configured_client):
+    client, tmp_path = configured_client
+    _make_script(tmp_path, "GUID-SOFT", "Soft Breaks", ["one\ntwo", "three"], index=0)
+
+    response = client.get("/export/GUID-SOFT")
+
+    assert response.status_code == 200
+    assert response.data == b"one\ntwo\n\nthree\n"
 
 
 def test_post_rejects_missing_csrf_token(configured_client):

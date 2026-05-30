@@ -46,7 +46,7 @@ archive = sys.argv[1]
 with zipfile.ZipFile(archive) as zf:
     names = sorted(zf.namelist())
     assert names == ["Fixture_Alpha.txt", "Fixture_Beta.txt"], names
-    assert zf.read("Fixture_Alpha.txt").decode("utf-8") == "Alpha line one\nAlpha line two\n"
+    assert zf.read("Fixture_Alpha.txt").decode("utf-8") == "Alpha line one\n\nAlpha line two\n"
     assert zf.read("Fixture_Beta.txt").decode("utf-8") == "Beta line one\n"
 PY
 
