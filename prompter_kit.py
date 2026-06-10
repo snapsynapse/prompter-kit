@@ -174,6 +174,132 @@ def verify_script_absent(guid_str: str, base_dir: str | None = None) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Write guard: schema check + automatic backup
+# ---------------------------------------------------------------------------
+
+AUTO_BACKUP_DIR = "PrompterKitBackups"
+AUTO_BACKUP_KEEP = 20
+
+
+class SchemaError(RuntimeError):
+    """The on-disk Camera Hub data does not match the format PrompterKit knows."""
+
+
+_SCHEMA_HELP = (
+    "PrompterKit is feature-complete and no longer tracks Camera Hub format "
+    "changes. Refusing to write so the library is not corrupted. Read-only "
+    "operations (list, export, backup) are still safe. See ARCHITECTURE.md "
+    "for the exact format this tool understands."
+)
+
+
+def _script_schema_problem(data, guid: str) -> str | None:
+    """Return a description of how a script JSON deviates from the documented
+    shape, or None when it matches."""
+    if not isinstance(data, dict):
+        return f"expected a JSON object, found {type(data).__name__}"
+    if data.get("GUID") not in ("", None, guid):
+        return f"embedded GUID {data.get('GUID')!r} does not match the filename"
+    chapters = data.get("chapters")
+    if not isinstance(chapters, list) or not all(isinstance(c, str) for c in chapters):
+        return "'chapters' is not a list of strings"
+    if not isinstance(data.get("friendlyName"), str):
+        return "'friendlyName' is not a string"
+    index = data.get("index")
+    if isinstance(index, bool) or not isinstance(index, int):
+        return "'index' is not an integer"
+    return None
+
+
+def check_library_schema(base_dir: str | None = None) -> None:
+    """Verify the on-disk data still matches the format PrompterKit was built for.
+
+    Raises SchemaError when AppSettings.json or any registered script JSON has
+    drifted from the documented shape. Missing files are fine (fresh install).
+    Unparseable script JSON is tolerated here because the read paths already
+    surface it as missing/corrupt without writing anything.
+    """
+    base_dir = _resolve_base_dir(base_dir)
+    try:
+        settings = _load_appsettings(base_dir)
+    except ValueError as e:
+        raise SchemaError(f"AppSettings.json did not parse: {e}\n{_SCHEMA_HELP}") from e
+
+    if LIBRARY_KEY not in settings:
+        return
+    guids = settings[LIBRARY_KEY]
+    if not isinstance(guids, list):
+        raise SchemaError(
+            f"AppSettings.json key '{LIBRARY_KEY}' is {type(guids).__name__}, "
+            f"expected list.\n{_SCHEMA_HELP}"
+        )
+    for guid in guids:
+        if not isinstance(guid, str) or not _SAFE_GUID_RE.fullmatch(guid):
+            raise SchemaError(
+                f"Library entry {guid!r} is not a recognized script GUID.\n{_SCHEMA_HELP}"
+            )
+        path = _script_json_path(guid, base_dir)
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            continue
+        problem = _script_schema_problem(data, guid)
+        if problem:
+            raise SchemaError(f"Script '{guid}': {problem}.\n{_SCHEMA_HELP}")
+
+
+def auto_backup(base_dir: str | None = None) -> str | None:
+    """Snapshot the library to a zip before a write operation.
+
+    Snapshots are written to <base_dir>/PrompterKitBackups/ and only the
+    newest AUTO_BACKUP_KEEP are kept. Returns the zip path, or None when
+    skipped (PROMPTERKIT_AUTO_BACKUP=0, or nothing exists to snapshot).
+    """
+    if os.environ.get("PROMPTERKIT_AUTO_BACKUP", "1") == "0":
+        return None
+    base_dir = _resolve_base_dir(base_dir)
+    settings_path = os.path.join(base_dir, "AppSettings.json")
+    texts_dir = os.path.join(base_dir, "Texts")
+    if not os.path.exists(settings_path) and not os.path.isdir(texts_dir):
+        return None
+
+    backup_dir = os.path.join(base_dir, AUTO_BACKUP_DIR)
+    os.makedirs(backup_dir, exist_ok=True)
+    stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_path = os.path.join(backup_dir, f"auto_{stamp}.zip")
+    counter = 1
+    while os.path.exists(output_path):
+        output_path = os.path.join(backup_dir, f"auto_{stamp}_{counter}.zip")
+        counter += 1
+
+    backup(output_path, base_dir)
+
+    snapshots = sorted(
+        name for name in os.listdir(backup_dir)
+        if name.startswith("auto_") and name.endswith(".zip")
+    )
+    for name in snapshots[:-AUTO_BACKUP_KEEP]:
+        try:
+            os.unlink(os.path.join(backup_dir, name))
+        except OSError:
+            pass
+    return output_path
+
+
+def _pre_write_guard(base_dir: str | None = None, *, check_schema: bool = True) -> None:
+    """Run before any operation that mutates the library: refuse to write when
+    the on-disk format has drifted from the documented shape, then snapshot
+    the current state so the write is always reversible."""
+    base_dir = _resolve_base_dir(base_dir)
+    if check_schema:
+        check_library_schema(base_dir)
+    auto_backup(base_dir)
+
+
+# ---------------------------------------------------------------------------
 # Markdown stripping
 # ---------------------------------------------------------------------------
 
@@ -308,6 +434,7 @@ def import_script(text_file: str, friendly_name: str, index: int, base_dir: str 
         raise ValueError("friendly_name must not be empty")
 
     base_dir = _resolve_base_dir(base_dir)
+    _pre_write_guard(base_dir)
     chapters = convert_text_file(text_file)
     guid_str = str(uuid.uuid4()).upper()
     json_data = generate_json_data(chapters, guid_str, friendly_name, index)
@@ -456,6 +583,7 @@ def delete_script(name_or_guid: str, base_dir: str | None = None) -> str:
 
     script = _resolve_script(name_or_guid, base_dir)
     guid = script["guid"]
+    _pre_write_guard(base_dir)
 
     settings_path = os.path.join(base_dir, "AppSettings.json")
     settings = _load_appsettings(base_dir)
@@ -490,6 +618,7 @@ def rename_script(name_or_guid: str, new_name: str, base_dir: str | None = None)
 
     script = _resolve_script(name_or_guid, base_dir)
     guid = script["guid"]
+    _pre_write_guard(base_dir)
 
     data = load_script_json(guid, base_dir)
     data["friendlyName"] = new_name.strip()
@@ -528,6 +657,7 @@ def reindex_scripts(ordered_names_or_guids: list[str] | None = None, base_dir: s
     scripts = list_scripts(base_dir)
     if not scripts:
         return []
+    _pre_write_guard(base_dir)
 
     if ordered_names_or_guids:
         # Resolve the explicitly ordered scripts first
@@ -580,6 +710,7 @@ def edit_script(name_or_guid: str, base_dir: str | None = None) -> str:
 
     script = _resolve_script(name_or_guid, base_dir)
     guid = script["guid"]
+    _pre_write_guard(base_dir)
     data = load_script_json(guid, base_dir)
     chapters = data.get("chapters", [])
 
@@ -720,6 +851,13 @@ def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) 
                 raise ValueError(f"Backup script '{guid}' has mismatched GUID metadata")
             script_data["GUID"] = guid
             backup_scripts[guid] = script_data
+
+    # Restore is the recovery path, so a drifted or corrupt live library must
+    # not block it. Snapshot best-effort instead of running the schema guard.
+    try:
+        auto_backup(base_dir)
+    except Exception as e:
+        print(f"Warning: pre-restore snapshot failed: {e}", file=sys.stderr)
 
     if merge:
         current_settings = _load_appsettings(base_dir)

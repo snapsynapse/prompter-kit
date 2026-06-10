@@ -46,6 +46,68 @@ A script exists only when both its registry entry and its `Texts/` file are
 present and their GUIDs agree. Most write operations touch both files, which
 is why write safety is the central design concern.
 
+## File format reference
+
+This is the complete on-disk format PrompterKit understands, recorded so the
+project can be forked or reimplemented without reverse-engineering. Last
+verified against Camera Hub 2.x. The schema guard (below) refuses to write
+when live data no longer matches this shape.
+
+`AppSettings.json` is a flat JSON object holding every Camera Hub setting.
+PrompterKit reads and writes exactly one key and preserves all others:
+
+```json
+{
+    "applogic.prompter.libraryList": [
+        "6A3F0F0A-1111-2222-3333-444455556666",
+        "0B1C2D3E-AAAA-BBBB-CCCC-DDDDEEEEFFFF"
+    ]
+}
+```
+
+- The value is a list of script GUIDs. List order is not display order;
+  display order comes from each script's `index`.
+- GUIDs are uppercase UUID4 strings. PrompterKit accepts any string matching
+  `[A-Za-z0-9._-]+` when reading, and generates `str(uuid.uuid4()).upper()`
+  when importing.
+
+`Texts/<GUID>.json` is one JSON object per script:
+
+```json
+{
+    "GUID": "6A3F0F0A-1111-2222-3333-444455556666",
+    "chapters": [
+        "First chapter line one\nline two after a soft return",
+        "Second chapter"
+    ],
+    "friendlyName": "My Script",
+    "index": 0
+}
+```
+
+- `GUID` (string): matches the filename stem. Camera Hub sometimes writes an
+  empty string here; PrompterKit accepts `""`, absent, or the matching GUID.
+- `chapters` (list of strings): one entry per chapter. A chapter is one
+  Camera Hub scroll/save point. Embedded `\n` is a soft return rendered as a
+  line break without a new scroll point.
+- `friendlyName` (string): display name. Not required to be unique; the
+  `doctor` command warns on duplicates.
+- `index` (integer): 0-based library sort position.
+
+Text round-trip convention (`group_into_chapters` / `chapters_to_text`): in
+flat text, a blank line is a hard return separating chapters and a single
+newline is a soft return kept inside the chapter. A chapter that itself
+contains a blank line (possible only from manual Camera Hub authoring) splits
+in two on export-then-reimport.
+
+Backup zips contain `AppSettings.json` at the root plus `Texts/<GUID>.json`
+for every registered, non-missing script, and nothing else. `restore` rejects
+archives with unexpected paths, duplicate entries, or GUID mismatches.
+
+PrompterKit also writes automatic pre-write snapshots (same zip format) to
+`PrompterKitBackups/` inside the data directory. Camera Hub ignores the extra
+directory.
+
 ## Module map
 
 ### prompter_kit.py
@@ -59,6 +121,8 @@ Grouped by responsibility:
   `update_appsettings`.
 - Verification: `verify_script_registered`, `verify_script_absent`. Called
   after writes to confirm the expected change is visible on disk.
+- Write guard: `check_library_schema`, `auto_backup`, `_pre_write_guard`,
+  `SchemaError`. Called at the top of every mutating operation.
 - Conversion: `strip_markdown`, `group_into_chapters`, `chapters_to_text`,
   `convert_text_file`, `generate_json_data`. `group_into_chapters` and
   `chapters_to_text` are inverses over the blank-line chapter convention, so
@@ -88,14 +152,28 @@ A Flask app that imports the core library. It adds only web concerns:
 
 ## Write safety
 
-Three layers protect the data directory:
+Five layers protect the data directory:
 
-1. Atomic writes. JSON is written to a temporary file and renamed into place,
+1. Schema guard. Before any write, `check_library_schema` verifies the live
+   data still matches the file format reference above. If Camera Hub has
+   changed its format since this project was last maintained, every write is
+   refused with a `SchemaError` rather than risking corruption. Read paths
+   (list, export, backup) are never blocked.
+2. Automatic pre-write snapshot. `auto_backup` zips the current library to
+   `PrompterKitBackups/` inside the data directory before the write, keeping
+   the newest `AUTO_BACKUP_KEEP` (20) snapshots. Disable with
+   `PROMPTERKIT_AUTO_BACKUP=0`. Every destructive operation is therefore
+   reversible with `restore`.
+3. Atomic writes. JSON is written to a temporary file and renamed into place,
    so an interrupted write cannot leave a half-written `AppSettings.json`.
-2. Post-write verification. After a write, the registry and script JSON are
+4. Post-write verification. After a write, the registry and script JSON are
    reloaded and the operation fails loudly if the expected change is absent.
-3. Rollback. If updating `AppSettings.json` fails after a new script JSON has
+5. Rollback. If updating `AppSettings.json` fails after a new script JSON has
    been written, the orphaned script JSON is removed.
+
+`restore` is the recovery path, so it skips the schema guard and treats the
+pre-write snapshot as best-effort: a corrupt live library must not block
+restoring from a known-good backup.
 
 `restore` adds a validation pass before writing anything: the backup zip must
 contain a parseable `AppSettings.json`, every GUID must match
@@ -118,6 +196,7 @@ python3 -m pytest tests/ -v
 
 - `tests/test_importer.py` — import, export, Markdown stripping, round trips.
 - `tests/test_crud.py` — delete, rename, reindex, backup, restore.
+- `tests/test_write_guard.py` — schema guard and automatic pre-write snapshots.
 - `tests/test_diagnostics.py` — `doctor` checks and Camera Hub path discovery.
 - `tests/test_gui.py` — GUI routes, CSRF protection, upload validation.
 - `tests/fixtures/` — sanitized Camera Hub data used by the suite.

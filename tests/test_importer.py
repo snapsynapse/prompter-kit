@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from prompter_kit import (
     LIBRARY_KEY,
+    SchemaError,
     _slugify,
     convert_text_file,
     export_all,
@@ -201,7 +202,7 @@ def test_import_script_empty_name_raises(tmp_path):
         import_script(str(script_file), "", 0, base_dir=str(tmp_path))
 
 
-def test_import_script_rollback_on_appsettings_failure(tmp_path):
+def test_import_script_refuses_on_unparseable_appsettings(tmp_path):
     script_file = tmp_path / "s.txt"
     script_file.write_text("text\n")
 
@@ -209,7 +210,7 @@ def test_import_script_rollback_on_appsettings_failure(tmp_path):
     settings_path.write_text("not json")
 
     texts_dir = tmp_path / "Texts"
-    with pytest.raises(ValueError):
+    with pytest.raises(SchemaError):
         import_script(str(script_file), "Rollback Test", 0, base_dir=str(tmp_path))
 
     remaining = list(texts_dir.glob("*.json")) if texts_dir.exists() else []

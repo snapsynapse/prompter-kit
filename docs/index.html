@@ -32,7 +32,7 @@
   <meta property="og:url" content="https://prompterkit.app/">
   <meta property="og:locale" content="en_US">
   <meta property="article:published_time" content="2026-04-19T00:00:00Z">
-  <meta property="article:modified_time" content="2026-05-29T00:00:00Z">
+  <meta property="article:modified_time" content="2026-06-09T00:00:00Z">
   <meta property="article:author" content="Sam Rogers">
   <meta property="article:publisher" content="https://paice.work/">
   <meta property="article:section" content="Creator Tools">
@@ -66,7 +66,7 @@
     "url": "https://prompterkit.app/",
     "mainEntityOfPage": { "@type": "WebPage", "@id": "https://prompterkit.app/" },
     "datePublished": "2026-04-19",
-    "dateModified": "2026-05-29",
+    "dateModified": "2026-06-09",
     "author": {
       "@type": "Person",
       "name": "Sam Rogers",
@@ -560,6 +560,9 @@
     </p>
     <p class="subtitle">A free local tool for Elgato Prompter creators. Import any text file, organize your library, and back up everything from a simple GUI or one command.</p>
     <p class="hook">Camera Hub gives you no way to import scripts, rename them, or back them up. One reinstall and your library is gone. PrompterKit wraps the local Camera Hub data format so your scripts stay portable, inspectable, and recoverable.</p>
+    <aside class="canonical-note" role="note" style="text-align:left;margin-top:1.5rem">
+      <strong>Maintenance status (June 2026).</strong> PrompterKit 1.0.0 is feature-complete and no further development is planned. Camera Hub now covers script rename, drag-to-reorder, and auto-save natively; PrompterKit remains useful for text and Markdown import/export, zip backup and restore, and CLI automation. A schema guard refuses all writes if a future Camera Hub update changes the on-disk format, and every write is preceded by an automatic snapshot, so the tool stays safe to run unmaintained. The full file format is documented in <a href="https://github.com/snapsynapse/prompter-kit/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md</a> for anyone who wants to fork.
+    </aside>
     <p><img src="/imgs/og.png" alt="PrompterKit &mdash; Manage your Elgato Prompter scripts" width="1200" height="630" style="max-width:100%;height:auto;border-radius:12px;margin-top:1.5rem"></p>
     <div class="cta-row">
       <a href="#install" class="btn btn-primary">Install PrompterKit</a>
@@ -775,7 +778,7 @@ python3 prompter_kit_gui.py</pre>
         <strong>Canonical reference.</strong> This page is the authoritative home for PrompterKit.
         Any discussion on YouTube creator forums, Reddit, or social media should link to
         <a href="https://prompterkit.app/">prompterkit.app</a> as the source.
-        Last updated: <time id="canonical-updated-date" datetime="2026-05-28">2026-05-28</time>.
+        Last updated: <time id="canonical-updated-date" datetime="2026-06-09">2026-06-09</time>.
         <a href="https://github.com/snapsynapse/prompter-kit/commits/main/CHANGELOG.md" target="_blank" rel="noopener">Revision history &rarr;</a>
       </aside>
     </div>

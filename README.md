@@ -9,6 +9,17 @@ reorder, or backup path. PrompterKit fills every gap.
 Site: https://prompterkit.app/
 Repo: https://github.com/snapsynapse/prompter-kit
 
+> **Maintenance status (June 2026).** PrompterKit 1.0.0 is feature-complete
+> and no further development is planned. Camera Hub itself now covers script
+> rename, drag-to-reorder, and auto-save (Camera Hub 1.9/2.0). PrompterKit
+> remains useful for what Camera Hub still lacks: plain text and Markdown
+> import/export with round-trip fidelity, zip backup/restore, and CLI
+> automation. A schema guard refuses all writes if a future Camera Hub update
+> changes the on-disk format, and every write is preceded by an automatic
+> snapshot, so running this unmaintained tool stays safe. The full file
+> format is documented in [ARCHITECTURE.md](ARCHITECTURE.md) for anyone who
+> wants to fork. See [ROADMAP.md](ROADMAP.md).
+
 Based on [spieldbergo/elgato_prompter_text_importer](https://github.com/spieldbergo/elgato_prompter_text_importer) (MIT).
 
 ## Requirements
@@ -182,6 +193,15 @@ line between chapters, soft breaks preserved within each.
 
 ## Safety
 
+- Schema guard: before any write, PrompterKit verifies that the on-disk data
+  still matches the Camera Hub format it was built for. If a future Camera
+  Hub update changes the format, every write is refused with a clear error
+  instead of corrupting the library. Read-only operations (list, export,
+  backup) always keep working.
+- Automatic snapshots: every write first archives the current library to
+  `PrompterKitBackups/` inside the Camera Hub data directory (newest 20
+  kept), so any change can be undone with `restore`. Set
+  `PROMPTERKIT_AUTO_BACKUP=0` to disable.
 - Atomic writes: JSON is written to a temp file then renamed, so an
   interrupted write cannot corrupt `AppSettings.json`.
 - Post-write verification: write operations reload `AppSettings.json` and the

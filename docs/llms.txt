@@ -4,6 +4,8 @@
 
 PrompterKit wraps the Elgato Camera Hub data format (AppSettings.json + Texts/*.json) with a full management layer that Camera Hub itself does not provide. It is aimed at YouTube creators who use the Elgato Prompter hardware and need a way to import scripts from text files, rename and reorder them, export them back, and back up their entire library.
 
+Maintenance status (June 2026): PrompterKit 1.0.0 is feature-complete and no further development is planned. Camera Hub now covers rename, drag-to-reorder, and auto-save natively; PrompterKit remains useful for text/Markdown import and export, zip backup and restore, and CLI automation. A schema guard refuses all writes if a future Camera Hub update changes the on-disk format, and every write is preceded by an automatic snapshot to PrompterKitBackups/ inside the Camera Hub data directory. The complete file format is documented in [ARCHITECTURE.md](https://github.com/snapsynapse/prompter-kit/blob/main/ARCHITECTURE.md) for anyone who wants to fork.
+
 ## Key concepts
 
 - **Import**: reads any .txt or .md file, strips Markdown formatting, groups it into Camera Hub chapters (a blank line is a hard return that starts a new chapter/scroll point; a single newline is a soft return kept as a line break inside the chapter), registers the script in AppSettings.json

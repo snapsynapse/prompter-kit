@@ -1,5 +1,5 @@
 canonical-url: https://prompterkit.app/.well-known/assistant-guide.txt
-guide-version: 1.2.1
-guide-sha256: 5694a7acd8ca2572d4204103823d2b4f90cca97dca35bd45d87cb2d57f966bd1
-logged-at: 2026-05-29T23:57:19Z
-log-note: Metadata refresh for PrompterKit 0.6.1; immutable release anchor pending v0.6.1 release.
+guide-version: 1.3.0
+guide-sha256: d4895a4f027548acb59c69154054b316ea394a9c77a21a907bc7b5295dee2446
+logged-at: 2026-06-10T05:00:08Z
+log-note: Final feature release PrompterKit 1.0.0; project enters maintenance mode; immutable release anchor pending v1.0.0 release.

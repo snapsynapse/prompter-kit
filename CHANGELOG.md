@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-09
+
+Final feature release. PrompterKit is feature-complete; no further
+development is planned. See ROADMAP.md for what 1.0.0 guarantees and how to
+fork.
+
+### Added
+- Schema guard: every write operation now verifies that AppSettings.json and
+  all registered script JSON still match the documented Camera Hub format
+  before touching anything, and refuses with a clear error if the format has
+  drifted (for example after a future Camera Hub update). Read-only
+  operations (list, export, backup) are never blocked.
+- Automatic pre-write snapshots: every write operation first archives the
+  current library to `PrompterKitBackups/` inside the Camera Hub data
+  directory (newest 20 kept), so any change can be undone with `restore`.
+  Disable with `PROMPTERKIT_AUTO_BACKUP=0`.
+- Complete on-disk file format reference in ARCHITECTURE.md, sufficient to
+  fork or reimplement the tool without reverse-engineering.
+- `tests/test_write_guard.py` covering the schema guard, snapshot rotation,
+  and restore-despite-corruption behavior.
+
+### Changed
+- `restore` skips the schema guard and treats the pre-write snapshot as
+  best-effort, so a corrupt live library cannot block recovery from a
+  known-good backup.
+- Flask dependency pinned to an exact known-good version (3.1.3) so the GUI
+  install stays reproducible without ongoing maintenance.
+- ROADMAP.md rewritten as a maintenance-mode statement; the standalone
+  double-click app plan is dropped.
+- README and site now carry a maintenance-status notice describing what
+  Camera Hub covers natively (rename, reorder, auto-save) and what
+  PrompterKit still uniquely provides (txt/md import/export, backup/restore,
+  CLI automation).
+
 ## [0.6.1] - 2026-05-29
 
 ### Fixed
