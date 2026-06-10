@@ -63,6 +63,23 @@ operation touches Camera Hub data.
 </details>
 
 <details>
+<summary>Homebrew (CLI only)</summary>
+
+Installs the `prompter-kit` command-line tool (backup, restore, import, export,
+doctor) without the web GUI:
+
+```text
+brew install snapsynapse/tap/prompter-kit
+prompter-kit doctor
+```
+
+The formula lives in
+[snapsynapse/homebrew-tap](https://github.com/snapsynapse/homebrew-tap). For
+the GUI, use one of the other install paths.
+
+</details>
+
+<details>
 <summary>Terminal Install</summary>
 
 Requires Python 3.10 or later. Clone the repo, create a local virtual
