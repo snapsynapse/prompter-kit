@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-06-12
+
+Maintenance hardening patch. PrompterKit remains feature-complete and in
+maintenance mode.
+
+### Fixed
+- Mutating operations now run the schema guard before resolving, sorting, or
+  editing scripts, so future Camera Hub format drift is reported as a
+  `SchemaError` instead of an incidental Python sorting/type error.
+- `restore --merge` now rolls back script JSON files if updating
+  `AppSettings.json` fails after new files are written, including preserving
+  any pre-existing unregistered JSON file at the same path.
+- macOS Camera Hub lifecycle commands now try the current app name
+  (`Elgato Camera Hub`) before the legacy `Camera Hub` name, so
+  `--restart` can relaunch current installs.
+
 ## [1.0.0] - 2026-06-09
 
 Final feature release. PrompterKit is feature-complete; no further
@@ -173,7 +189,7 @@ fork.
   (macOS `osascript`, Windows `taskkill`)
 - `--restart` flag on `import`: auto-stop Camera Hub before write, auto-start after
 - Local web GUI (`prompter_kit_gui.py`) wrapping all CLI functions with
-  drag-and-drop import, browser-based backup/restore, and auto-open on launch
+  drag-and-drop import, browser-based export, and auto-open on launch
 - Landing page at https://prompterkit.app/ with OG image and `llms.txt`
 
 ### Changed

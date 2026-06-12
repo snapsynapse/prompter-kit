@@ -9,16 +9,18 @@ reorder, or backup path. PrompterKit fills every gap.
 Site: https://prompterkit.app/
 Repo: https://github.com/snapsynapse/prompter-kit
 
-> **Maintenance status (June 2026).** PrompterKit 1.0.0 is feature-complete
-> and no further development is planned. Camera Hub itself now covers script
+> **Maintenance status (June 2026).** PrompterKit 1.0.x is feature-complete
+> and no further feature development is planned. Camera Hub itself now covers script
 > rename, drag-to-reorder, and auto-save (Camera Hub 1.9/2.0). PrompterKit
 > remains useful for what Camera Hub still lacks: plain text and Markdown
 > import/export with round-trip fidelity, zip backup/restore, and CLI
 > automation. A schema guard refuses all writes if a future Camera Hub update
 > changes the on-disk format, and every write is preceded by an automatic
-> snapshot, so running this unmaintained tool stays safe. The full file
-> format is documented in [ARCHITECTURE.md](ARCHITECTURE.md) for anyone who
-> wants to fork. See [ROADMAP.md](ROADMAP.md).
+> snapshot, so running this unmaintained tool stays safe. The 1.0.1 safety
+> patch hardens schema-drift refusal before mutating command resolution and
+> rolls back merge-restore file writes if settings cannot be updated. The
+> full file format is documented in [ARCHITECTURE.md](ARCHITECTURE.md) for
+> anyone who wants to fork. See [ROADMAP.md](ROADMAP.md).
 
 Based on [spieldbergo/elgato_prompter_text_importer](https://github.com/spieldbergo/elgato_prompter_text_importer) (MIT).
 
@@ -247,7 +249,7 @@ path exists.
 python3 -m pytest tests/ -v
 ```
 
-107 tests cover import, export, push/pull aliases, CRUD, GUI routes, CSRF
+135 tests cover import, export, push/pull aliases, CRUD, GUI routes, CSRF
 protection, upload validation, backup/restore, Markdown stripping, atomic-write
 rollback, post-write verification, diagnostics, fixture compatibility,
 base-directory overrides, simulated overwrite failures, Camera Hub path

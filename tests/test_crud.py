@@ -327,6 +327,70 @@ def test_restore_merge_preserves_existing_content(tmp_path):
     assert data["chapters"] == ["existing content"]
 
 
+def test_restore_merge_rolls_back_new_file_when_settings_write_fails(tmp_path, monkeypatch):
+    src = tmp_path / "src"
+    dst = tmp_path / "dst"
+    src.mkdir()
+    dst.mkdir()
+
+    _setup(src, [("NEW", "New", ["from backup"], 0)])
+    archive = str(tmp_path / "backup.zip")
+    backup(archive, base_dir=str(src))
+
+    _setup(dst, [("OLD", "Old", ["existing"], 0)])
+    settings_path = str(dst / "AppSettings.json")
+    original_atomic_write = prompter_kit._atomic_write_json
+
+    def failing_atomic_write(path, data):
+        if path == settings_path:
+            raise OSError("simulated settings write failure")
+        return original_atomic_write(path, data)
+
+    monkeypatch.setattr(prompter_kit, "_atomic_write_json", failing_atomic_write)
+
+    with pytest.raises(OSError, match="settings write failure"):
+        restore(archive, merge=True, base_dir=str(dst))
+
+    assert list_scripts(base_dir=str(dst))[0]["guid"] == "OLD"
+    assert not (dst / "Texts" / "NEW.json").exists()
+
+
+def test_restore_merge_restores_unregistered_file_when_settings_write_fails(tmp_path, monkeypatch):
+    src = tmp_path / "src"
+    dst = tmp_path / "dst"
+    src.mkdir()
+    dst.mkdir()
+
+    _setup(src, [("ORPHAN", "Backup Orphan", ["from backup"], 0)])
+    archive = str(tmp_path / "backup.zip")
+    backup(archive, base_dir=str(src))
+
+    _setup(dst, [("OLD", "Old", ["existing"], 0)])
+    orphan_path = dst / "Texts" / "ORPHAN.json"
+    orphan_path.write_text(json.dumps({
+        "GUID": "ORPHAN",
+        "friendlyName": "Local Orphan",
+        "chapters": ["local orphan"],
+        "index": 99,
+    }), encoding="utf-8")
+    settings_path = str(dst / "AppSettings.json")
+    original_atomic_write = prompter_kit._atomic_write_json
+
+    def failing_atomic_write(path, data):
+        if path == settings_path:
+            raise OSError("simulated settings write failure")
+        return original_atomic_write(path, data)
+
+    monkeypatch.setattr(prompter_kit, "_atomic_write_json", failing_atomic_write)
+
+    with pytest.raises(OSError, match="settings write failure"):
+        restore(archive, merge=True, base_dir=str(dst))
+
+    data = json.loads(orphan_path.read_text(encoding="utf-8"))
+    assert data["friendlyName"] == "Local Orphan"
+    assert data["chapters"] == ["local orphan"]
+
+
 def test_restore_replace_removes_stale_json_files(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"

@@ -311,6 +311,45 @@ def test_cli_import_restart_runs_after_failed_import(tmp_path, monkeypatch):
     assert calls == [("stop", True), ("start", None)]
 
 
+def test_macos_camerahub_running_checks_current_and_legacy_names(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "darwin")
+    calls = []
+
+    def fake_run(cmd, capture_output=False, text=False, check=False):
+        calls.append(cmd)
+        app_name = cmd[-1].split('"')[1]
+        if app_name == "Elgato Camera Hub":
+            return SimpleNamespace(returncode=1, stdout="")
+        return SimpleNamespace(returncode=0, stdout="true\n")
+
+    monkeypatch.setattr(prompter_kit.subprocess, "run", fake_run)
+
+    assert prompter_kit.camerahub_is_running() is True
+    assert calls == [
+        ["osascript", "-e", 'application "Elgato Camera Hub" is running'],
+        ["osascript", "-e", 'application "Camera Hub" is running'],
+    ]
+
+
+def test_macos_camerahub_start_falls_back_to_legacy_name(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "darwin")
+    calls = []
+
+    def fake_run(cmd, check=False):
+        calls.append(cmd)
+        if cmd[-1] == "Elgato Camera Hub":
+            raise prompter_kit.subprocess.CalledProcessError(1, cmd)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(prompter_kit.subprocess, "run", fake_run)
+
+    prompter_kit.camerahub_start()
+    assert calls == [
+        ["open", "-a", "Elgato Camera Hub"],
+        ["open", "-a", "Camera Hub"],
+    ]
+
+
 def test_cli_base_dir_works_for_mutating_commands_and_backup_restore(tmp_path):
     source = tmp_path / "source.txt"
     source.write_text("one\ntwo\n", encoding="utf-8")

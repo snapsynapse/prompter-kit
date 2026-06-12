@@ -1,7 +1,8 @@
 # Roadmap
 
-PrompterKit is feature-complete as of 1.0.0. No further development is
-planned.
+PrompterKit is feature-complete as of 1.0.0. No further feature development
+is planned. The 1.0.1 line is limited to maintenance hardening of the
+final-release safety claims.
 
 Elgato Camera Hub has absorbed much of what this tool was built for: script
 rename and drag-to-reorder arrived in Camera Hub 1.9, and auto-save in 2.0.
@@ -18,6 +19,14 @@ restore, and CLI automation.
   inside the Camera Hub data directory, reversible with `restore`.
 - The complete file format is documented in
   [ARCHITECTURE.md](ARCHITECTURE.md) so anyone can fork and continue.
+
+## What 1.0.1 tightens
+
+- Mutating commands run the schema guard before resolving, sorting, or editing
+  scripts, so schema drift is reported as a clear refusal before command
+  resolution touches drifted metadata.
+- `restore --merge` rolls back script JSON files if the final
+  `AppSettings.json` write fails.
 
 ## Dropped plans
 

@@ -131,7 +131,9 @@ Grouped by responsibility:
   `export_all`, `delete_script`, `rename_script`, `reindex_scripts`,
   `edit_script`, `backup`, `restore`.
 - Camera Hub lifecycle: `camerahub_is_running`, `camerahub_stop`,
-  `camerahub_start` (macOS `osascript`, Windows `taskkill`).
+  `camerahub_start` (macOS `osascript` / `open`, trying current
+  `Elgato Camera Hub` and legacy `Camera Hub` app names; Windows
+  `taskkill`).
 - Diagnostics: `diagnose_camerahub`, backing the `doctor` command.
 - CLI layer: `_cmd_*` handlers and `main`, which builds the argparse
   subcommands.
@@ -180,7 +182,9 @@ contain a parseable `AppSettings.json`, every GUID must match
 `[A-Za-z0-9._-]+`, no unexpected paths may be present, and each script's
 embedded GUID must match its filename. Replace mode builds a staged `Texts/`
 directory first, swaps it into place, and restores the prior live files if the
-swap or verification fails.
+swap or verification fails. Merge mode rolls back any script JSON files it
+writes if the final `AppSettings.json` update fails, preserving pre-existing
+unregistered files at those paths.
 
 ## CLI and aliases
 

@@ -7,7 +7,7 @@
 | 1.0.x | Yes (security fixes only) |
 | < 1.0 | No |
 
-PrompterKit 1.0.0 is feature-complete and in maintenance mode. No feature
+PrompterKit 1.0.x is feature-complete and in maintenance mode. No feature
 development is planned, but security reports against 1.0.x are still
 reviewed and fixed.
 

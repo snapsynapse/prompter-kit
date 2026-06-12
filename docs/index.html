@@ -32,7 +32,7 @@
   <meta property="og:url" content="https://prompterkit.app/">
   <meta property="og:locale" content="en_US">
   <meta property="article:published_time" content="2026-04-19T00:00:00Z">
-  <meta property="article:modified_time" content="2026-06-09T00:00:00Z">
+  <meta property="article:modified_time" content="2026-06-12T00:00:00Z">
   <meta property="article:author" content="Sam Rogers">
   <meta property="article:publisher" content="https://paice.work/">
   <meta property="article:section" content="Creator Tools">
@@ -66,7 +66,7 @@
     "url": "https://prompterkit.app/",
     "mainEntityOfPage": { "@type": "WebPage", "@id": "https://prompterkit.app/" },
     "datePublished": "2026-04-19",
-    "dateModified": "2026-06-09",
+    "dateModified": "2026-06-12",
     "author": {
       "@type": "Person",
       "name": "Sam Rogers",
@@ -558,10 +558,10 @@
       <span class="sep">&middot;</span>
       <a href="https://opensource.org/licenses/MIT" rel="license" target="_blank">MIT</a>
     </p>
-    <p class="subtitle">A free local tool for Elgato Prompter creators. Import any text file, organize your library, and back up everything from a simple GUI or one command.</p>
-    <p class="hook">Camera Hub gives you no way to import scripts, rename them, or back them up. One reinstall and your library is gone. PrompterKit wraps the local Camera Hub data format so your scripts stay portable, inspectable, and recoverable.</p>
+    <p class="subtitle">A free local tool for Elgato Prompter creators. Import and export plain text, organize your library, and back up everything from a simple GUI and CLI.</p>
+    <p class="hook">Camera Hub still gives you no plain text or Markdown import/export workflow and no portable backup archive. PrompterKit wraps the local Camera Hub data format so your scripts stay portable, inspectable, and recoverable.</p>
     <aside class="canonical-note" role="note" style="text-align:left;margin-top:1.5rem">
-      <strong>Maintenance status (June 2026).</strong> PrompterKit 1.0.0 is feature-complete and no further development is planned. Camera Hub now covers script rename, drag-to-reorder, and auto-save natively; PrompterKit remains useful for text and Markdown import/export, zip backup and restore, and CLI automation. A schema guard refuses all writes if a future Camera Hub update changes the on-disk format, and every write is preceded by an automatic snapshot, so the tool stays safe to run unmaintained. The full file format is documented in <a href="https://github.com/snapsynapse/prompter-kit/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md</a> for anyone who wants to fork.
+      <strong>Maintenance status (June 2026).</strong> PrompterKit 1.0.x is feature-complete and no further feature development is planned. Camera Hub now covers script rename, drag-to-reorder, and auto-save natively; PrompterKit remains useful for text and Markdown import/export, zip backup and restore, and CLI automation. A schema guard refuses all writes if a future Camera Hub update changes the on-disk format, and every write is preceded by an automatic snapshot, so the tool stays safe to run unmaintained. The 1.0.1 safety patch hardens schema-drift refusal before mutating command resolution and rolls back merge-restore file writes if settings cannot be updated. The full file format is documented in <a href="https://github.com/snapsynapse/prompter-kit/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md</a> for anyone who wants to fork.
     </aside>
     <p><img src="/imgs/og.png" alt="PrompterKit &mdash; Manage your Elgato Prompter scripts" width="1200" height="630" style="max-width:100%;height:auto;border-radius:12px;margin-top:1.5rem"></p>
     <div class="cta-row">
@@ -585,7 +585,7 @@
       <div class="pillar">
         <span class="icon" aria-hidden="true">🗄️</span>
         <h3>Back up your library</h3>
-        <p>The CLI archives every script to a zip file and restores the whole library after a Camera Hub update, a reinstall, or a move to a new computer. Replace-mode restore stages files first and rolls back the live library if the final swap fails.</p>
+        <p>The CLI archives every script to a zip file and restores the whole library after a Camera Hub update, a reinstall, or a move to a new computer. Replace-mode restore stages files first and rolls back the live library if the final swap fails; merge mode rolls back added script files if settings cannot be updated.</p>
       </div>
       <div class="pillar">
         <span class="icon" aria-hidden="true">🌐</span>
@@ -722,7 +722,7 @@ python3 prompter_kit_gui.py</pre>
           </ol>
         </div>
         <div class="tab-panel" id="panel-cli">
-          <p>Prefer the terminal? Every action is also a one-liner. The CLI is optional; the GUI covers daily use.</p>
+          <p>Prefer the terminal? Every action is also a one-liner. The GUI covers import, export, rename, delete, and index normalization; the CLI covers full backup, restore, explicit reorder, and Camera Hub lifecycle commands.</p>
           <ul class="cmd-list">
             <li><code>import script.txt --name "Episode 42"</code><span class="desc">Import a text file as a new script</span></li>
             <li><code>export --list</code><span class="desc">See all registered scripts</span></li>
@@ -778,7 +778,7 @@ python3 prompter_kit_gui.py</pre>
         <strong>Canonical reference.</strong> This page is the authoritative home for PrompterKit.
         Any discussion on YouTube creator forums, Reddit, or social media should link to
         <a href="https://prompterkit.app/">prompterkit.app</a> as the source.
-        Last updated: <time id="canonical-updated-date" datetime="2026-06-09">2026-06-09</time>.
+        Last updated: <time id="canonical-updated-date" datetime="2026-06-12">2026-06-12</time>.
         <a href="https://github.com/snapsynapse/prompter-kit/commits/main/CHANGELOG.md" target="_blank" rel="noopener">Revision history &rarr;</a>
       </aside>
     </div>

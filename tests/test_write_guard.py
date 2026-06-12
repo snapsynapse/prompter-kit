@@ -15,8 +15,10 @@ from prompter_kit import (
     auto_backup,
     check_library_schema,
     delete_script,
+    edit_script,
     import_script,
     rename_script,
+    reindex_scripts,
     restore,
 )
 
@@ -105,6 +107,31 @@ def test_write_refused_when_schema_drifted(tmp_path):
     script_file.write_text("text\n")
     with pytest.raises(SchemaError):
         import_script(str(script_file), "Blocked", 0, base_dir=str(tmp_path))
+
+
+@pytest.mark.parametrize(
+    ("operation", "args"),
+    [
+        (delete_script, ("DRIFT",)),
+        (rename_script, ("DRIFT", "New Name")),
+        (reindex_scripts, ()),
+        (edit_script, ("DRIFT",)),
+    ],
+)
+def test_mutating_ops_check_schema_before_sorting_drifted_library(tmp_path, operation, args):
+    _make_library(tmp_path, [
+        ("GOOD", "Good", ["a"], 0),
+        ("DRIFT", "Drift", ["b"], 1),
+    ])
+    (tmp_path / "Texts" / "DRIFT.json").write_text(json.dumps({
+        "GUID": "DRIFT",
+        "chapters": ["b"],
+        "friendlyName": "Drift",
+        "index": "1",
+    }))
+
+    with pytest.raises(SchemaError):
+        operation(*args, base_dir=str(tmp_path))
 
 
 # ---------------------------------------------------------------------------

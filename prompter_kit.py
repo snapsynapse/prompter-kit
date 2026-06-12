@@ -581,9 +581,10 @@ def delete_script(name_or_guid: str, base_dir: str | None = None) -> str:
     """
     base_dir = _resolve_base_dir(base_dir)
 
+    check_library_schema(base_dir)
     script = _resolve_script(name_or_guid, base_dir)
     guid = script["guid"]
-    _pre_write_guard(base_dir)
+    _pre_write_guard(base_dir, check_schema=False)
 
     settings_path = os.path.join(base_dir, "AppSettings.json")
     settings = _load_appsettings(base_dir)
@@ -616,9 +617,10 @@ def rename_script(name_or_guid: str, new_name: str, base_dir: str | None = None)
         raise ValueError("new_name must not be empty")
     base_dir = _resolve_base_dir(base_dir)
 
+    check_library_schema(base_dir)
     script = _resolve_script(name_or_guid, base_dir)
     guid = script["guid"]
-    _pre_write_guard(base_dir)
+    _pre_write_guard(base_dir, check_schema=False)
 
     data = load_script_json(guid, base_dir)
     data["friendlyName"] = new_name.strip()
@@ -654,10 +656,11 @@ def reindex_scripts(ordered_names_or_guids: list[str] | None = None, base_dir: s
     """
     base_dir = _resolve_base_dir(base_dir)
 
+    check_library_schema(base_dir)
     scripts = list_scripts(base_dir)
     if not scripts:
         return []
-    _pre_write_guard(base_dir)
+    _pre_write_guard(base_dir, check_schema=False)
 
     if ordered_names_or_guids:
         # Resolve the explicitly ordered scripts first
@@ -708,9 +711,10 @@ def edit_script(name_or_guid: str, base_dir: str | None = None) -> str:
     """
     base_dir = _resolve_base_dir(base_dir)
 
+    check_library_schema(base_dir)
     script = _resolve_script(name_or_guid, base_dir)
     guid = script["guid"]
-    _pre_write_guard(base_dir)
+    _pre_write_guard(base_dir, check_schema=False)
     data = load_script_json(guid, base_dir)
     chapters = data.get("chapters", [])
 
@@ -867,19 +871,41 @@ def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) 
 
         written = 0
         written_guids: list[str] = []
-        for guid in validated_guids:
-            if guid in current_guids:
-                continue
-            if guid not in backup_scripts:
-                continue
-            dest = os.path.join(texts_dir, f"{guid}.json")
-            _atomic_write_json(dest, backup_scripts[guid])
-            current_guids.append(guid)
-            written_guids.append(guid)
-            written += 1
+        prior_files: dict[str, bytes | None] = {}
+        try:
+            for guid in validated_guids:
+                if guid in current_guids:
+                    continue
+                if guid not in backup_scripts:
+                    continue
+                dest = os.path.join(texts_dir, f"{guid}.json")
+                if guid not in prior_files:
+                    if os.path.exists(dest):
+                        with open(dest, "rb") as f:
+                            prior_files[guid] = f.read()
+                    else:
+                        prior_files[guid] = None
+                _atomic_write_json(dest, backup_scripts[guid])
+                current_guids.append(guid)
+                written_guids.append(guid)
+                written += 1
 
-        current_settings[LIBRARY_KEY] = current_guids
-        _atomic_write_json(settings_path, current_settings)
+            current_settings[LIBRARY_KEY] = current_guids
+            _atomic_write_json(settings_path, current_settings)
+        except Exception:
+            for guid in reversed(written_guids):
+                dest = os.path.join(texts_dir, f"{guid}.json")
+                prior = prior_files.get(guid)
+                try:
+                    if prior is None:
+                        if os.path.exists(dest):
+                            os.unlink(dest)
+                    else:
+                        with open(dest, "wb") as f:
+                            f.write(prior)
+                except OSError:
+                    pass
+            raise
         for guid in written_guids:
             if guid in backup_scripts:
                 verify_script_registered(
@@ -959,15 +985,20 @@ def _mtime(path: str) -> str:
 def camerahub_is_running() -> bool | None:
     """Return Camera Hub process status, or None when the platform cannot tell."""
     if sys.platform == "darwin":
-        result = subprocess.run(
-            ["osascript", "-e", f'application "{_CAMERAHUB_APP_NAME}" is running'],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if result.returncode != 0:
-            return None
-        return result.stdout.strip().lower() == "true"
+        saw_known_app = False
+        for app_name in _CAMERAHUB_APP_NAMES:
+            result = subprocess.run(
+                ["osascript", "-e", f'application "{app_name}" is running'],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if result.returncode != 0:
+                continue
+            saw_known_app = True
+            if result.stdout.strip().lower() == "true":
+                return True
+        return False if saw_known_app else None
     if sys.platform == "win32":
         result = subprocess.run(
             ["tasklist", "/FI", f"IMAGENAME eq {_CAMERAHUB_WIN_EXE}"],
@@ -1050,17 +1081,20 @@ def diagnose_camerahub(base_dir: str | None = None) -> list[dict]:
 # Camera Hub lifecycle
 # ---------------------------------------------------------------------------
 
-_CAMERAHUB_APP_NAME = "Camera Hub"
+_CAMERAHUB_APP_NAMES = ("Elgato Camera Hub", "Camera Hub")
 _CAMERAHUB_WIN_EXE = "CameraHub.exe"
 
 
 def camerahub_stop(wait: bool = False, timeout: float = 10.0) -> None:
     """Quit Camera Hub gracefully."""
     if sys.platform == "darwin":
-        subprocess.run(
-            ["osascript", "-e", f'tell application "{_CAMERAHUB_APP_NAME}" to quit'],
-            check=False,
-        )
+        for app_name in _CAMERAHUB_APP_NAMES:
+            subprocess.run(
+                ["osascript", "-e", f'tell application "{app_name}" to quit'],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
     elif sys.platform == "win32":
         subprocess.run(["taskkill", "/IM", _CAMERAHUB_WIN_EXE, "/F"], check=False)
     else:
@@ -1081,7 +1115,15 @@ def camerahub_stop(wait: bool = False, timeout: float = 10.0) -> None:
 def camerahub_start() -> None:
     """Launch Camera Hub."""
     if sys.platform == "darwin":
-        subprocess.run(["open", "-a", _CAMERAHUB_APP_NAME], check=True)
+        last_error: subprocess.CalledProcessError | None = None
+        for app_name in _CAMERAHUB_APP_NAMES:
+            try:
+                subprocess.run(["open", "-a", app_name], check=True)
+                return
+            except subprocess.CalledProcessError as e:
+                last_error = e
+        if last_error is not None:
+            raise last_error
     elif sys.platform == "win32":
         subprocess.run(["start", "", _CAMERAHUB_WIN_EXE], shell=True, check=True)
     else:

@@ -28,6 +28,14 @@ remaining surface does not justify ongoing maintenance.
   forked without reverse-engineering.
 - Flask pinned exactly (3.1.3) for reproducible installs.
 
+## Post-1.0 safety patch
+
+1.0.1 is a maintenance hardening patch, not a feature release. It preserves
+the 1.0.0 maintenance-mode decision while tightening the final-release safety
+claims: mutating commands now run schema checks before resolving or sorting
+scripts, and merge-mode restore rolls back script files if settings cannot be
+updated.
+
 ## What was deliberately dropped
 
 The standalone double-click app (PyInstaller bundle, code signing,
@@ -49,3 +57,6 @@ None recorded.
 
 - 2026-06-09: File created at 1.0.0 release to record the maintenance-mode
   decision. Release: https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.0
+- 2026-06-12: Recorded 1.0.1 as a maintenance hardening patch, not a reopen
+  of feature development. Planned release:
+  https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.1
