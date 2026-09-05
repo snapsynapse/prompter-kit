@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import unicodedata
 import uuid
 import zipfile
 
@@ -101,8 +102,13 @@ def _unique_text_filename(name: str, guid: str, used_names: set[str] | None = No
     slug = _slugify(name) or guid
     filename = f"{slug}.txt"
     if used_names is not None:
-        if filename in used_names:
+        occupied = {unicodedata.normalize("NFC", n).casefold() for n in used_names}
+        if unicodedata.normalize("NFC", filename).casefold() in occupied:
             filename = f"{slug}_{guid[:8]}.txt"
+        counter = 2
+        while unicodedata.normalize("NFC", filename).casefold() in occupied:
+            filename = f"{slug}_{guid[:8]}_{counter}.txt"
+            counter += 1
         used_names.add(filename)
     return filename
 
@@ -187,8 +193,9 @@ class SchemaError(RuntimeError):
 
 _SCHEMA_HELP = (
     "PrompterKit is feature-complete and no longer tracks Camera Hub format "
-    "changes. Refusing to write so the library is not corrupted. Read-only "
-    "operations (list, export, backup) are still safe. See ARCHITECTURE.md "
+    "changes. Refusing this mutation because known schema fields differ. "
+    "Read operations may also fail on unfamiliar data. Preserve an independent "
+    "data copy before recovery attempts. See ARCHITECTURE.md "
     "for the exact format this tool understands."
 )
 
@@ -347,7 +354,7 @@ def group_into_chapters(text: str, *, strip_md: bool) -> list[str]:
     current: list[str] = []
 
     for raw_line in text.split("\n"):
-        content = strip_markdown(raw_line) if strip_md else raw_line.rstrip()
+        content = strip_markdown(raw_line) if strip_md else raw_line
         if not content.strip():
             if current:
                 chapters.append("\n".join(current))
@@ -369,14 +376,14 @@ def chapters_to_text(chapters: list[str]) -> str:
 
 
 def convert_text_file(file_path: str) -> list[str]:
-    """Read a plain text or Markdown file and group it into chapters."""
+    """Group text into chapters, stripping formatting only for .md files."""
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             raw_text = f.read()
     except OSError as e:
         raise OSError(f"Could not read '{file_path}': {e}") from e
 
-    chapters = group_into_chapters(raw_text, strip_md=True)
+    chapters = group_into_chapters(raw_text, strip_md=os.path.splitext(file_path)[1].lower() == ".md")
 
     if not chapters:
         raise ValueError(f"'{file_path}' contains no text after stripping whitespace")
@@ -551,7 +558,7 @@ def export_all(output_dir: str, base_dir: str | None = None) -> list[tuple[str, 
 
     os.makedirs(output_dir, exist_ok=True)
     exported = []
-    used_names: set[str] = set()
+    used_names: set[str] = set(os.listdir(output_dir))
 
     for script in scripts:
         if script["missing"]:

@@ -5,28 +5,28 @@ portfolio.yaml (PAICE federation only by 2026-06-09 scope decision).
 
 ## Status: maintenance mode (decided 2026-06-09)
 
-PrompterKit 1.0.0 is the final feature release. No further development is
-planned. Security reports against 1.0.x are still reviewed and fixed (see
-SECURITY.md).
+PrompterKit 1.0.0 is the final feature release. No feature development or
+Camera Hub compatibility tracking is planned. Security review is best-effort,
+with no guaranteed response or remediation timeline (see SECURITY.md).
 
 ## Why
 
 Elgato Camera Hub absorbed much of the original need: script rename and
-drag-to-reorder (Camera Hub 1.9), auto-save (2.0). What PrompterKit still
-uniquely provides is narrow and stable: plain text / Markdown import-export
-with round-trip fidelity, zip backup/restore, and CLI automation. That
-remaining surface does not justify ongoing maintenance.
+drag-to-reorder (Camera Hub 1.9), auto-save (2.0). PrompterKit's retained scope
+is text / Markdown conversion, registered-library backups, and CLI automation.
+This does not justify an ongoing feature or compatibility roadmap.
 
-## How 1.0.0 makes unmaintained operation safe
+## Safeguards and limits
 
-- Schema guard: every write validates the on-disk Camera Hub format against
-  the documented shape and refuses on drift. A future Camera Hub format
-  change degrades PrompterKit to read-only instead of corrupting libraries.
-- Automatic pre-write snapshots to `PrompterKitBackups/` (newest 20 kept),
-  so every write is reversible with `restore`.
+- Normal mutations check known schema fields. Restore bypasses the live guard.
+  Unknown formats can also break read operations; future compatibility is not
+  guaranteed.
+- Automatic registered-library snapshots have a retention limit of 20 and
+  exclude missing, corrupt, and unregistered files. Recovery is not guaranteed.
 - Complete file format reference in ARCHITECTURE.md, so the project can be
   forked without reverse-engineering.
-- Flask pinned exactly (3.1.3) for reproducible installs.
+- Flask has an exact direct dependency pin. Transitive dependencies are not
+  locked; this is not a reproducible environment or a security guarantee.
 
 ## Post-1.0 safety patch
 
@@ -44,10 +44,18 @@ maintenance; source plus the AI-assisted install path age better.
 
 ## What would reopen development
 
-Only a security report against 1.0.x, or Camera Hub shipping native txt/md
-import-export AND backup (at which point archive the repo rather than
-extend it). Schema-guard refusals reported by users are working as designed,
-not bugs to fix: the documented response is "use export/backup, or fork".
+Security reports may justify a discretionary patch. They do not automatically
+reopen development. No active monitoring of manufacturer releases is planned.
+Archive the repo if its remaining use no longer warrants keeping it active.
+Schema refusals are a reason to stop writing, preserve an independent data copy,
+and use compatible read tools or a maintained fork.
+
+## September 2026 cleanup
+
+1.0.2 fixes export filename collisions and preserves literal .txt input,
+while keeping the repo public in maintenance-only state. Documentation and
+agent surfaces reflect actual limitations and best-effort support. This is a
+bounded cleanup, not a new feature roadmap.
 
 ## Exceptions to Repo Standards
 
@@ -55,8 +63,11 @@ None recorded.
 
 ## Changelog
 
+- 2026-09-05: Clarified best-effort maintenance with no response or fix SLA;
+  scoped 1.0.2 to data-fidelity fixes and documentation/publishing consistency.
+
 - 2026-06-09: File created at 1.0.0 release to record the maintenance-mode
   decision. Release: https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.0
 - 2026-06-12: Recorded 1.0.1 as a maintenance hardening patch, not a reopen
-  of feature development. Planned release:
+  of feature development. Published release:
   https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.1

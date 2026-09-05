@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-09-05
+
+Maintenance cleanup. PrompterKit remains feature-complete and maintenance-only.
+
+### Fixed
+- Keep installation commands and CLI descriptions within the mobile viewport.
+- Export-all resolves secondary and case-insensitive filename collisions and
+  avoids overwriting existing destination entries.
+- Plain-text imports preserve literal Markdown markers and nonblank-line spaces;
+  only .md imports strip formatting. Chapter/line-ending normalization remains.
+- Published assistant-guide copies now match the root source; a pre-deployment
+  check verifies copies, SHA-256, byte count, versions, and local tag evidence.
+
+### Documentation
+- Clarify best-effort security review without response or remediation deadlines,
+  no planned feature or compatibility work, and fork guidance.
+- Correct backup exclusions, replace/merge effects, text fidelity, GUI scope,
+  compatibility evidence, contributor setup, and website metadata.
+- Remove stale manufacturer comparisons and the feature-request template.
+
 ## [1.0.1] - 2026-06-12
 
 Maintenance hardening patch. PrompterKit remains feature-complete and in

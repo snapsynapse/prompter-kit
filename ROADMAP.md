@@ -1,24 +1,20 @@
 # Roadmap
 
-PrompterKit is feature-complete as of 1.0.0. No further feature development
-is planned. The 1.0.1 line is limited to maintenance hardening of the
-final-release safety claims.
+PrompterKit remains public and maintenance-only. No feature development or
+Camera Hub compatibility tracking is planned. Security reports and contributions
+receive best-effort review, without guaranteed response or fix timelines.
+Forks are welcome. The retained scope is text conversion, library management,
+registered-library backups, and CLI automation.
 
-Elgato Camera Hub has absorbed much of what this tool was built for: script
-rename and drag-to-reorder arrived in Camera Hub 1.9, and auto-save in 2.0.
-PrompterKit remains useful for what Camera Hub still does not offer: plain
-text and Markdown import/export with round-trip fidelity, zip backup and
-restore, and CLI automation.
+## Supported workflow and limits
 
-## What 1.0.0 guarantees
-
-- A schema guard refuses every write if a future Camera Hub update changes
-  the on-disk format, so an unmaintained PrompterKit cannot corrupt a library
-  it no longer understands. Read-only operations keep working.
-- Every write is preceded by an automatic snapshot to `PrompterKitBackups/`
-  inside the Camera Hub data directory, reversible with `restore`.
-- The complete file format is documented in
-  [ARCHITECTURE.md](ARCHITECTURE.md) so anyone can fork and continue.
+- Normal mutations check known schema fields; restore bypasses the live guard.
+  Future format changes can still break reads and writes.
+- Automatic snapshots cover registered readable scripts and full settings,
+  not the whole Camera Hub directory. Recovery is not guaranteed.
+- The data shape and limits are documented in [ARCHITECTURE.md](ARCHITECTURE.md).
+- The June 2026 macOS live eval passed without recording the Camera Hub version.
+  Automated fixture tests do not establish compatibility with future releases.
 
 ## What 1.0.1 tightens
 
@@ -27,6 +23,12 @@ restore, and CLI automation.
   resolution touches drifted metadata.
 - `restore --merge` rolls back script JSON files if the final
   `AppSettings.json` write fails.
+
+## What 1.0.2 tightens
+
+- Resolve export filename collisions and preserve literal .txt content.
+- Align published agent-guide copies and check their hashes before deployment.
+- Correct support, backup, conversion, and compatibility claims.
 
 ## Dropped plans
 

@@ -4,12 +4,12 @@
 
 | Version | Supported |
 |---|---|
-| 1.0.x | Yes (security fixes only) |
+| 1.0.x | Best-effort security review |
 | < 1.0 | No |
 
 PrompterKit 1.0.x is feature-complete and in maintenance mode. No feature
-development is planned, but security reports against 1.0.x are still
-reviewed and fixed.
+development or Camera Hub compatibility tracking is planned. Security reports
+against 1.0.x may be reviewed and addressed as maintainer capacity allows.
 
 ## Reporting a vulnerability
 
@@ -19,8 +19,9 @@ https://github.com/snapsynapse/prompter-kit/security/advisories/new
 
 Do not open a public issue for security reports.
 
-Expect an initial response within 7 days. If the report is confirmed, a
-fix and coordinated disclosure will be scheduled from there.
+There is no guaranteed response, fix, or remediation timeline. A private report
+is welcome but does not create a commitment to issue a patch. Forks may provide
+continued support; assess their provenance independently.
 
 ## Scope
 

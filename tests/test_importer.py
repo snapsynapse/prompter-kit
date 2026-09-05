@@ -72,10 +72,10 @@ def test_convert_text_file_mixed_soft_and_hard(tmp_path):
     assert convert_text_file(str(f)) == ["a1\na2", "b1\nb2\nb3"]
 
 
-def test_convert_text_file_strips_whitespace(tmp_path):
+def test_convert_text_file_preserves_plain_text_whitespace(tmp_path):
     f = tmp_path / "script.txt"
     f.write_text("  hello  \n  world  \n", encoding="utf-8")
-    assert convert_text_file(str(f)) == ["hello\nworld"]
+    assert convert_text_file(str(f)) == ["  hello  \n  world  "]
 
 
 def test_convert_text_file_collapses_multiple_blank_lines(tmp_path):
@@ -368,6 +368,44 @@ def test_export_all_deduplicates_filenames(tmp_path):
 
 def test_export_all_empty_returns_empty(tmp_path):
     assert export_all(str(tmp_path / "out"), base_dir=str(tmp_path)) == []
+
+
+def test_export_all_preserves_content_across_collisions_and_existing_files(tmp_path):
+    names = ["Same_G2", "Same", "Same", "same", "Same"]
+    guids = ["G0", "G1", "G2", "G3", "G4"]
+    for i, (name, guid) in enumerate(zip(names, guids)):
+        _make_script(tmp_path, guid, name, [guid], i)
+        _register_guid(tmp_path, guid)
+    out = tmp_path / "out"
+    out.mkdir()
+    (out / "Same_G4.txt").write_text("keep me", encoding="utf-8")
+    (out / "Same_G4_2.txt").write_text("keep me too", encoding="utf-8")
+    exported = export_all(str(out), base_dir=str(tmp_path))
+    assert len({path.casefold() for _, path in exported}) == len(guids)
+    for guid, path in exported:
+        with open(path, encoding="utf-8") as f:
+            assert f.read() == guid + "\n"
+    assert (out / "Same_G4.txt").read_text() == "keep me"
+    assert (out / "Same_G4_2.txt").read_text() == "keep me too"
+
+
+@pytest.mark.parametrize("extension", [".txt", ".TXT"])
+def test_plain_text_import_export_preserves_literal_markers(tmp_path, extension):
+    source = tmp_path / ("source" + extension)
+    content = "  account_id #42 **literal**  \n1. Keep numbering\n\n[link](url)\n"
+    source.write_text(content, encoding="utf-8")
+    path, _ = import_script(str(source), "Literal", 0, str(tmp_path))
+    guid = os.path.splitext(os.path.basename(path))[0]
+    out = tmp_path / "out.txt"
+    export_script(guid, str(out), str(tmp_path))
+    assert out.read_text(encoding="utf-8") == content
+    assert convert_text_file(str(out)) == load_script_json(guid, str(tmp_path))["chapters"]
+
+
+def test_uppercase_markdown_extension_strips_formatting(tmp_path):
+    source = tmp_path / "source.MD"
+    source.write_text("# Heading\n**bold**", encoding="utf-8")
+    assert convert_text_file(str(source)) == ["Heading\nbold"]
 
 
 # ---------------------------------------------------------------------------

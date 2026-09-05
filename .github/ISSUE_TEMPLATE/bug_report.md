@@ -4,6 +4,11 @@ about: Something isn't working
 labels: bug
 ---
 
+This project is maintenance-only. Reports receive best-effort review without
+an assured response or fix. Feature and compatibility updates are not planned.
+Do not attach private scripts, AppSettings.json, or backup ZIPs. Use private
+GitHub Security Advisories for vulnerabilities.
+
 **What happened?**
 
 **Steps to reproduce**
@@ -16,9 +21,7 @@ labels: bug
 
 **Actual behavior / error output**
 
-```
-paste error here
-```
+Provide sanitized error output here.
 
 **Environment**
 

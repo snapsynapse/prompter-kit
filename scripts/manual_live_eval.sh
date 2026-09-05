@@ -4,17 +4,16 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 STAMP="$(date +%Y%m%d_%H%M%S)"
-SAFE_STAMP="${STAMP//_/}"
 WORK_DIR="${TMPDIR:-/tmp}/prompterkit-live-eval-${STAMP}"
 SCRIPT_FILE="${WORK_DIR}/live-eval-script.txt"
 PULLED_FILE="${WORK_DIR}/pulled.txt"
 BACKUP_FILE="${WORK_DIR}/backup.zip"
-SCRIPT_NAME="PrompterKit Live Eval ${SAFE_STAMP}"
+SCRIPT_NAME="PrompterKit Live Eval ${STAMP}"
 
 mkdir -p "${WORK_DIR}"
 cat > "${SCRIPT_FILE}" <<EOF
-PrompterKit live eval line one ${SAFE_STAMP}
-PrompterKit live eval line two ${SAFE_STAMP}
+PrompterKit live eval line one ${STAMP}
+PrompterKit live eval line two ${STAMP}
 EOF
 
 echo "Working directory: ${WORK_DIR}"

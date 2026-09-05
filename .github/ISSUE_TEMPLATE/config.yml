@@ -2,4 +2,4 @@ blank_issues_enabled: false
 contact_links:
   - name: Questions and discussion
     url: https://github.com/snapsynapse/prompter-kit/discussions
-    about: Ask questions, share tips, or talk about Elgato Prompter workflows here.
+    about: Best-effort community discussion. No feature or compatibility updates are planned.

@@ -101,6 +101,26 @@ def test_export_all_skips_missing_and_empty_scripts(client, monkeypatch):
         assert zf.read("Alpha.txt").decode("utf-8") == "one\n"
 
 
+def test_gui_export_all_resolves_secondary_and_case_collisions(configured_client):
+    client, base = configured_client
+    for i, (guid, name) in enumerate([("G0", "Same_G2"), ("G1", "Same"), ("G2", "Same"), ("G3", "same")]):
+        _make_script(base, guid, name, [guid], i)
+    response = client.get("/export-all")
+    assert response.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(response.data)) as archive:
+        assert len({n.casefold() for n in archive.namelist()}) == 4
+        assert {archive.read(n) for n in archive.namelist()} == {b"G0\n", b"G1\n", b"G2\n", b"G3\n"}
+
+
+@pytest.mark.parametrize(("filename", "expected"), [("literal.txt", "account_id #42"), ("source.md", "accountid 42")])
+def test_gui_import_uses_file_extension_for_markdown(configured_client, filename, expected):
+    client, base = configured_client
+    response = client.post("/import", data=_csrf_form(client, name="Format", index="0", file=(io.BytesIO(b"account_id #42"), filename)))
+    assert response.status_code == 302
+    script = list_scripts(str(base))[0]
+    assert load_script_json(script["guid"], str(base))["chapters"] == [expected]
+
+
 def test_import_uses_configured_base_dir(configured_client):
     client, tmp_path = configured_client
 

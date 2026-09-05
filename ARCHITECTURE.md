@@ -6,10 +6,9 @@ usage, see [README.md](README.md).
 ## Overview
 
 PrompterKit is a management layer over the Elgato Camera Hub on-disk data
-format. Camera Hub stores Prompter scripts but exposes no import, export,
-rename, reorder, or backup path. PrompterKit reads and writes the same files
-directly, with safeguards so a failed operation cannot leave the data
-directory corrupt.
+format. It reads and writes files directly to provide text conversion,
+library management, and backups. Safeguards reduce some write risks; they
+cannot guarantee recovery or compatibility with future Camera Hub versions.
 
 The project is two modules over one core library:
 
@@ -18,8 +17,9 @@ prompter_kit.py       CLI entry point + core library (all operations)
 prompter_kit_gui.py   Flask web GUI, a thin layer that calls the core library
 ```
 
-The GUI duplicates no logic. Every route resolves to the same functions the
-CLI calls, so behavior and safety guarantees are identical across surfaces.
+The GUI calls core mutation functions and shares text-conversion and export
+naming helpers with the CLI. It adds upload validation and HTTP responses.
+Backup, restore, and explicit reorder are CLI workflows.
 
 ## Camera Hub data model
 
@@ -35,26 +35,28 @@ older path exists.
 
 Two kinds of file matter:
 
-- `AppSettings.json` — the registry. Each script has a GUID, an index that
-  sets library order, and a friendly name.
+- `AppSettings.json` - the registry list of script GUIDs.
+  Names and sort indexes live in the per-script JSON files.
 - `Texts/<GUID>.json` — per-script content. Each chapter is one entry and one
   Camera Hub scroll/save point. On import, a blank line (hard return) starts a
   new chapter and a single newline (soft return) is kept as a line break inside
   the chapter, matching how Camera Hub itself stores embedded newlines.
 
 A script exists only when both its registry entry and its `Texts/` file are
-present and their GUIDs agree. Most write operations touch both files, which
-is why write safety is the central design concern.
+present and their GUIDs agree. Import and delete update both; rename, edit,
+and reindex update script files. There is no library-wide transaction or lock.
 
 ## File format reference
 
 This is the complete on-disk format PrompterKit understands, recorded so the
-project can be forked or reimplemented without reverse-engineering. Last
-verified against Camera Hub 2.x. The schema guard (below) refuses to write
-when live data no longer matches this shape.
+project can be forked or reimplemented. Automated compatibility evidence uses
+sanitized fixtures. A macOS live eval passed in June 2026, but its Camera Hub
+version was not recorded. No current-version or all-2.x compatibility claim
+is made. The schema guard checks selected fields, with exceptions below.
 
 `AppSettings.json` is a flat JSON object holding every Camera Hub setting.
-PrompterKit reads and writes exactly one key and preserves all others:
+Normal library operations modify one key and preserve the others.
+Replace restore replaces the full settings file from the archive:
 
 ```json
 {
@@ -69,7 +71,8 @@ PrompterKit reads and writes exactly one key and preserves all others:
   display order comes from each script's `index`.
 - GUIDs are uppercase UUID4 strings. PrompterKit accepts any string matching
   `[A-Za-z0-9._-]+` when reading, and generates `str(uuid.uuid4()).upper()`
-  when importing.
+  when importing. The GUID validation applies to schema checks and restore;
+read helpers do not uniformly enforce it.
 
 `Texts/<GUID>.json` is one JSON object per script:
 
@@ -98,15 +101,23 @@ Text round-trip convention (`group_into_chapters` / `chapters_to_text`): in
 flat text, a blank line is a hard return separating chapters and a single
 newline is a soft return kept inside the chapter. A chapter that itself
 contains a blank line (possible only from manual Camera Hub authoring) splits
-in two on export-then-reimport.
+in two on export-then-reimport. Empty chapters also do not round-trip.
+From 1.0.2, .txt imports preserve literal characters and nonblank-line spaces;
+.md imports use the existing Markdown stripping rules. Both normalize line
+endings and collapse blank-line separators.
 
 Backup zips contain `AppSettings.json` at the root plus `Texts/<GUID>.json`
-for every registered, non-missing script, and nothing else. `restore` rejects
-archives with unexpected paths, duplicate entries, or GUID mismatches.
+for registered scripts that can be read and parsed. Missing, corrupt, and
+unregistered script files and other Camera Hub data are excluded. Replace
+restore removes the entire live Texts directory, including unregistered files,
+and replaces unrelated settings too. Keep an independent full directory copy.
+Merge can overwrite unregistered files at incoming GUID paths. Archives contain
+private script content and settings. `restore` rejects unexpected archive paths,
+duplicate entries, or GUID mismatches; it does not fully validate script schema.
 
 PrompterKit also writes automatic pre-write snapshots (same zip format) to
-`PrompterKitBackups/` inside the data directory. Camera Hub ignores the extra
-directory.
+`PrompterKitBackups/` inside the data directory. This is separate from GUI
+Export all, whose ZIP contains only text and cannot be used with restore.
 
 ## Module map
 
@@ -115,18 +126,19 @@ directory.
 Grouped by responsibility:
 
 - Path resolution: `get_camerahub_path`, `_resolve_base_dir`,
-  `_script_json_path`. `--base-dir` and `PROMPTERKIT_BASE_DIR` override the
+  `_script_json_path`. CLI `--base-dir` and GUI `PROMPTERKIT_BASE_DIR` override the
   discovered path so operations can run against a disposable copy.
 - Atomic I/O: `_atomic_write_json`, `_load_appsettings`, `save_json_to_texts`,
   `update_appsettings`.
 - Verification: `verify_script_registered`, `verify_script_absent`. Called
   after writes to confirm the expected change is visible on disk.
 - Write guard: `check_library_schema`, `auto_backup`, `_pre_write_guard`,
-  `SchemaError`. Called at the top of every mutating operation.
+  `SchemaError`. Used by normal mutation operations; restore bypasses the live
+  schema check and uses a best-effort snapshot.
 - Conversion: `strip_markdown`, `group_into_chapters`, `chapters_to_text`,
   `convert_text_file`, `generate_json_data`. `group_into_chapters` and
-  `chapters_to_text` are inverses over the blank-line chapter convention, so
-  import, export, and `edit` all round-trip through one definition.
+  `chapters_to_text` share the blank-line convention, with the normalization
+  and fidelity limits described above.
 - Core operations: `import_script`, `list_scripts`, `export_script`,
   `export_all`, `delete_script`, `rename_script`, `reindex_scripts`,
   `edit_script`, `backup`, `restore`.
@@ -142,11 +154,11 @@ Grouped by responsibility:
 
 A Flask app that imports the core library. It adds only web concerns:
 
-- A shared `--base-dir` resolver and index parsing.
+- A `PROMPTERKIT_BASE_DIR` environment override and index parsing.
 - CSRF protection: `_csrf_token`, `_validate_csrf`, a `_protect_post_routes`
   before-request hook, and a `_inject_csrf_token` context processor.
 - Upload validation: `_validate_import_filename` rejects unsupported
-  extensions and unsafe names.
+  extensions. Uploads use generated temporary filenames.
 - Routes: `/`, `/import`, `/export/<guid>`, `/export-all`, `/delete/<guid>`,
   `/rename/<guid>`, `/reindex`. Every write route is POST and CSRF-checked.
 - `_open_browser` opens the local browser on launch. The server binds to
@@ -156,18 +168,18 @@ A Flask app that imports the core library. It adds only web concerns:
 
 Five layers protect the data directory:
 
-1. Schema guard. Before any write, `check_library_schema` verifies the live
-   data still matches the file format reference above. If Camera Hub has
-   changed its format since this project was last maintained, every write is
-   refused with a `SchemaError` rather than risking corruption. Read paths
-   (list, export, backup) are never blocked.
+1. Schema guard. Import, rename, delete, edit, and reindex check known fields
+   before mutation. Missing and unparseable script files are tolerated; absent
+   registry keys are accepted. Detected drift raises SchemaError, but unknown
+   future formats are not guaranteed detectable. Read paths bypass this guard
+   and can also fail on unknown data.
 2. Automatic pre-write snapshot. `auto_backup` zips the current library to
    `PrompterKitBackups/` inside the data directory before the write, keeping
-   the newest `AUTO_BACKUP_KEEP` (20) snapshots. Disable with
-   `PROMPTERKIT_AUTO_BACKUP=0`. Every destructive operation is therefore
-   reversible with `restore`.
+   the up to `AUTO_BACKUP_KEEP` (20) snapshots. Disable with
+   `PROMPTERKIT_AUTO_BACKUP=0`. Snapshots have the backup exclusions above;
+   they do not guarantee that every destructive operation is reversible.
 3. Atomic writes. JSON is written to a temporary file and renamed into place,
-   so an interrupted write cannot leave a half-written `AppSettings.json`.
+   providing per-file atomic replacement, not a transaction across all files.
 4. Post-write verification. After a write, the registry and script JSON are
    reloaded and the operation fails loudly if the expected change is absent.
 5. Rollback. If updating `AppSettings.json` fails after a new script JSON has
@@ -184,7 +196,9 @@ embedded GUID must match its filename. Replace mode builds a staged `Texts/`
 directory first, swaps it into place, and restores the prior live files if the
 swap or verification fails. Merge mode rolls back any script JSON files it
 writes if the final `AppSettings.json` update fails, preserving pre-existing
-unregistered files at those paths.
+unregistered files at those paths. Merge verification after the settings commit
+is outside that rollback block. Rollback can itself fail due to filesystem
+errors. No operation guarantees recovery or prevents concurrent writers.
 
 ## CLI and aliases
 
@@ -194,8 +208,10 @@ underlying command handlers; they are not separate implementations.
 
 ## Testing
 
-```
+Literal
+```sh
 python3 -m pytest tests/ -v
+python3 scripts/check_agent_surfaces.py
 ```
 
 - `tests/test_importer.py` — import, export, Markdown stripping, round trips.
