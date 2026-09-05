@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-09-05
+
+GuideCheck alignment release. App behavior is unchanged from 1.0.2.
+
+### Fixed
+- Update assistant guide to GuideCheck 0.7.1, pin installation to app 1.0.2,
+  and bind executed repository scripts with SHA-256 checks.
+- Add guide pin regression tests and explicit unpublished-guide preparation;
+  deployment still requires matching tagged guide bytes.
+
+### Documentation
+- Document the DNS TXT provenance record, publication transition, and hosted
+  Level 4 closeout gate without claiming unpublished conformance.
+
 ## [1.0.2] - 2026-09-05
 
 Maintenance cleanup. PrompterKit remains feature-complete and maintenance-only.

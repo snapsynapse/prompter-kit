@@ -33,12 +33,18 @@ Based on [spieldbergo/elgato_prompter_text_importer](https://github.com/spieldbe
 The [assistant guide](https://prompterkit.app/.well-known/assistant-guide.txt)
 provides structured setup actions and approval gates. Explain and approve
 commands individually; do not upload local scripts or backups to an assistant.
-The guide declares a [GuideCheck](https://guidecheck.org/) profile and publishes
+Guide 1.4.0 targets the [GuideCheck](https://guidecheck.org/) 0.7.1 profile and publishes
 a [manifest](https://prompterkit.app/.well-known/assistant-guide-manifest.txt)
 and [hash record](https://prompterkit.app/.well-known/assistant-guide-transparency-log.txt).
 The repository checks copy and hash consistency, not full GuideCheck conformance.
 Use the [verifier](https://guidecheck.org/verify) to assess conformance; neither
 conformance nor matching hashes establish software safety.
+Level 4 is the guide-file target, not an achieved claim here. Level 5 requires
+a separate enforcing runtime. The corrected guide passed local Level 3 checks
+on 2026-09-05 with no blocking findings or warnings. Public Level 4 requires
+the v1.0.3 guide release and matching live provenance; consult the hosted
+verifier and release notes for dated results. It installs the
+reviewed app 1.0.2 with script hash checks. See [publishing and DNS steps](CONTRIBUTING.md#dns-provenance).
 
 ### Terminal install
 

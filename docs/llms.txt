@@ -21,7 +21,8 @@ Maintenance status (September 2026): no feature development or Camera Hub compat
 
 The June 2026 macOS live eval passed but did not record the Camera Hub version. Automated tests use sanitized fixtures; they do not establish current-version compatibility. This summary includes planned 1.0.2 behavior; check the changelog and installed version before relying on it.
 
-Root assistant-guide files are authoritative; docs/.well-known copies are published. The installation guide has its own version (1.3.1) and retains its existing v1.0.1 byte anchor. It does not pin the cloned default branch to that app release. The local publishing check verifies copies, hashes, metadata, and tag guide bytes, not full GuideCheck conformance or current remote availability.
+Root assistant-guide files are authoritative; docs/.well-known copies are published. Guide 1.4.0 targets GuideCheck 0.7.1 and installs app 1.0.2 with script hash checks. Its guide-byte anchor is v1.0.3. Level 4 is the guide-file target; no Level 5 runtime claim is made. Local checks do not establish live provenance or software safety.
+Local GuideCheck 0.7.1 validation on 2026-09-05 achieved Level 3 with zero blocking findings or warnings. Consult the hosted verifier and release notes for dated public Level 4 results. The exact TXT record and publication sequence are documented in CONTRIBUTING.md; do not infer Level 4 from a declared profile or DNS entry alone.
 
 ## Key files
 

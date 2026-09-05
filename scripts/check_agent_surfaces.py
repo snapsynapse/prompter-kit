@@ -26,7 +26,7 @@ def fields(path):
     return result
 
 
-def check(root=ROOT, *, sync=False):
+def check(root=ROOT, *, sync=False, prepare_release=None):
     guide = (root / FILES[0]).read_bytes()
     metadata = fields(root / FILES[0])
     manifest = fields(root / FILES[1])
@@ -49,11 +49,18 @@ def check(root=ROOT, *, sync=False):
         raise ValueError("Expected a semver release anchor")
     if anchor not in log.get("log-note", ""):
         raise ValueError("Log release anchor differs from manifest")
-    # The guide version is independent of the app version. Its existing release
-    # anchor must actually contain these bytes, even when a newer app is planned.
-    tagged = subprocess.run(["git", "show", f"{anchor[len(prefix):]}:assistant-guide.txt"],
-                            cwd=root, capture_output=True, check=True).stdout
-    if tagged != guide:
+    tag = anchor[len(prefix):]
+    if prepare_release is not None and prepare_release != tag:
+        raise ValueError("Preparation tag differs from manifest")
+    # Preparation is explicitly incomplete evidence, never a deployment gate.
+    try:
+        tagged = subprocess.run(["git", "show", f"{tag}:assistant-guide.txt"],
+                                cwd=root, capture_output=True, check=True).stdout
+    except subprocess.CalledProcessError:
+        if prepare_release is None:
+            raise
+        tagged = None
+    if tagged is not None and tagged != guide:
         raise ValueError("Release tag guide differs from current source")
     published = root / "docs" / ".well-known"
     if sync:
@@ -68,9 +75,14 @@ def check(root=ROOT, *, sync=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sync", action="store_true", help="Copy validated root files to docs/.well-known")
+    parser.add_argument("--prepare-release", metavar="TAG",
+                        help="Allow an unavailable tag during authoring; not release verification")
     args = parser.parse_args()
     try:
-        check(sync=args.sync)
+        check(sync=args.sync, prepare_release=args.prepare_release)
     except (OSError, ValueError, KeyError, IndexError, subprocess.CalledProcessError) as error:
         parser.exit(1, f"Agent surfaces check failed: {error}\n")
-    print("Agent copies, metadata, and local release-tag guide bytes match. Not a conformance certification.")
+    if args.prepare_release:
+        print("Preparation only: copies and metadata match. Run strict checks after tagging; publication is unverified.")
+    else:
+        print("Agent copies, metadata, and local release-tag guide bytes match. Not a conformance certification.")
