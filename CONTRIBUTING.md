@@ -5,6 +5,11 @@ Bug reports, security reports, and contributions receive best-effort review;
 there is no guaranteed response or merge timeline. See SECURITY.md for private
 vulnerability reporting.
 
+Read [INTENT.md](INTENT.md) for maintenance scope and exceptions, and
+[repo-standards.yaml](repo-standards.yaml) for declared applicability, delivery
+maps and existing checks. The declaration records expectations, not verified
+conformance, and does not replace the native checks or publishing gates below.
+
 ## Local setup
 
 Python 3.10+ required. The CLI uses the standard library, but the full test

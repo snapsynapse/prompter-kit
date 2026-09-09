@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- Add an optional repository standards declaration and contributor/intent
+  pointers, preserving maintenance-only scope and existing verification gates.
+
 ## [1.0.3] - 2026-09-05
 
 GuideCheck alignment release. App behavior is unchanged from 1.0.2.

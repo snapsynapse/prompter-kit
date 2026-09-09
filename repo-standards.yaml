@@ -1,0 +1,162 @@
+# Optional applicability declaration, not a conformance certificate.
+schema_version: 1
+intent: INTENT.md
+roles:
+  - application
+  - hosted
+  - agent-facing
+surfaces:
+  application:
+    kind: package
+    sources:
+      - prompter_kit.py
+      - prompter_kit_gui.py
+      - requirements-gui.txt
+    producer: manual
+    delivery: >-
+      Python source delivered through repository checkout and release source
+      archives. The current assistant guide pins app 1.0.2; the guide release
+      anchor v1.0.3 is a separate identity. No standalone binary is planned.
+  website:
+    kind: website
+    sources:
+      - docs/index.html
+      - docs/llms.txt
+      - docs/robots.txt
+      - docs/sitemap.xml
+      - docs/CNAME
+      - .github/workflows/pages.yml
+    urls:
+      - https://prompterkit.app/
+    producer: manual
+    delivery: >-
+      The Pages workflow checks agent surfaces and uploads docs as the website
+      artifact. The configured URL is a delivery expectation, not live evidence.
+  assistant-guide:
+    kind: guide
+    sources:
+      - assistant-guide.txt
+      - assistant-guide-manifest.txt
+      - assistant-guide-transparency-log.txt
+      - scripts/check_agent_surfaces.py
+    outputs:
+      - docs/.well-known/assistant-guide.txt
+      - docs/.well-known/assistant-guide-manifest.txt
+      - docs/.well-known/assistant-guide-transparency-log.txt
+    urls:
+      - https://prompterkit.app/.well-known/assistant-guide.txt
+      - https://prompterkit.app/.well-known/assistant-guide-manifest.txt
+      - https://prompterkit.app/.well-known/assistant-guide-transparency-log.txt
+    producer: mixed
+    build: >-
+      Root guide and sidecars are manually maintained. The existing checker can
+      explicitly sync published copies after an authorized guide edit; ordinary
+      validation is read-only. See CONTRIBUTING.md for the publishing contract.
+    delivery: >-
+      Root files are authoritative; docs/.well-known copies enter the Pages
+      artifact. Matching copies establish delivery consistency, not independent
+      provenance. The selected profile and contributor gate also require
+      separately verified anchors and hosted assessment.
+checks:
+  agent-surfaces:
+    command: python3 scripts/check_agent_surfaces.py
+    cwd: .
+    prerequisites: >-
+      Python 3.10+, Git, and the local release tag named by the manifest with
+      matching guide bytes. No dependency installation or network fetch occurs.
+    expected: >-
+      Exit 0 with matching root/published bytes, metadata and local release-tag
+      guide bytes. This is neither GuideCheck conformance nor remote publication
+      evidence. Preparation mode cannot replace this strict Pages gate.
+    blocking: true
+  tests:
+    command: python3 -m pytest tests/ -q
+    cwd: .
+    prerequisites: >-
+      Python 3.10+, pytest and Flask from requirements-gui.txt in the chosen
+      environment. Tests use fixtures and temporary directories.
+    expected: Exit 0 with all tests passing, as required by CONTRIBUTING.md.
+    blocking: true
+standards:
+  guidecheck:
+    applicability: applicable
+    adoption: adopted
+    profile: human-verifiable-assistant-guide 0.7.1
+    reason: >-
+      The published-guide contract declares guide 1.4.0 for app 1.0.2. Adoption
+      records that implementation, not an achieved level. CONTRIBUTING.md retains
+      the hosted Level 4 target with zero blocking findings and disclosure of
+      remaining warnings; Level 5 needs a separate enforcing runtime. Local
+      copy/tag checks do not establish independent anchor administration,
+      hosted conformance, runtime enforcement or software safety. Hosted
+      verification and DNS/release acceptance remain separate existing gates.
+    surfaces:
+      - assistant-guide
+    checks:
+      - agent-surfaces
+      - tests
+    evidence:
+      - CONTRIBUTING.md
+      - tests/test_agent_surfaces.py
+      - .github/workflows/pages.yml
+  skill-a11y-audit:
+    applicability: applicable
+    adoption: unresolved
+    reason: >-
+      The public landing page is in scope for accessibility assessment. The
+      existing Pages workflow checks agent surfaces but provides no automated
+      accessibility gate. Current accessibility conformance is unassessed here;
+      this declaration does not add a gate or waive an assessment.
+    surfaces:
+      - website
+    checks: []
+    evidence:
+      - .github/workflows/pages.yml
+  siteline:
+    applicability: applicable
+    adoption: unresolved
+    reason: >-
+      The public website is in scope for agent-usability assessment. No current
+      scan or relationship to a verified deployment identity is established by
+      this declaration. Reconcile the complete reported check, standard and
+      finding inventory against target intent and current source/deployed
+      evidence, recording scanner and rubric identities. A grade alone is not
+      conformance; missing results remain unavailable. Existing owner crawler
+      policy remains authoritative. No fresh scan is authorized here.
+    surfaces:
+      - website
+    checks: []
+  ai-posture:
+    applicability: unresolved
+    adoption: unresolved
+    reason: >-
+      The owner has not settled the product's AI Posture applicability or
+      declaration levels. The AI-assisted installation guide alone does not
+      resolve that judgment. No declaration, exception or conformance is claimed.
+    surfaces:
+      - application
+      - website
+      - assistant-guide
+    checks: []
+  graceful-boundaries:
+    applicability: unresolved
+    adoption: unresolved
+    reason: >-
+      The application has schema guards and documented limits, but their
+      relationship to the Graceful Boundaries agent-facing refusal contract has
+      not been assessed. Existing safety tests are not GB conformance evidence.
+    surfaces:
+      - application
+    checks:
+      - tests
+    evidence:
+      - INTENT.md
+      - tests/test_write_guard.py
+reassess_when:
+  - The maintenance-only scope or supported application behavior changes.
+  - Guide version, GuideCheck profile, app pin or release anchor changes.
+  - Sources, sync logic, native gates or the Pages delivery route changes.
+  - A new package, public API, agent runtime or skill bundle is introduced.
+  - The owner resolves AI Posture applicability or declaration levels.
+  - A dated accessibility or hosted GuideCheck assessment changes the evidence.
+  - The owner changes crawler policy; this declaration does not authorize it.

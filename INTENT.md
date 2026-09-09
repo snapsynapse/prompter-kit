@@ -57,11 +57,25 @@ while keeping the repo public in maintenance-only state. Documentation and
 agent surfaces reflect actual limitations and best-effort support. This is a
 bounded cleanup, not a new feature roadmap.
 
+## Repository standards declaration
+
+[repo-standards.yaml](repo-standards.yaml) records optional applicability,
+source and delivery maps, and existing verification expectations. This INTENT
+remains authoritative for purpose, maintenance boundaries and exceptions.
+The declaration does not certify conformance or reopen feature development.
+Guide 1.4.0, GuideCheck profile 0.7.1 and app 1.0.2 remain separate identities;
+[CONTRIBUTING.md](CONTRIBUTING.md#agent-guide-publishing) retains the existing
+publishing gates and hosted Level 4 target. AI Posture applicability and
+owner-assigned levels remain unresolved.
+
 ## Exceptions to Repo Standards
 
 None recorded.
 
 ## Changelog
+
+- 2026-09-08: Added an optional repository standards declaration without
+  changing maintenance scope, version identities or publishing gates.
 
 - 2026-09-05: Clarified best-effort maintenance with no response or fix SLA;
   scoped 1.0.2 to data-fidelity fixes and documentation/publishing consistency.
