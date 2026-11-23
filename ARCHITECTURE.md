@@ -72,7 +72,7 @@ Replace restore replaces the full settings file from the archive:
 - GUIDs are uppercase UUID4 strings. PrompterKit accepts any string matching
   `[A-Za-z0-9._-]+` when reading, and generates `str(uuid.uuid4()).upper()`
   when importing. The GUID validation applies to schema checks and restore;
-read helpers do not uniformly enforce it.
+  read helpers do not uniformly enforce it.
 
 `Texts/<GUID>.json` is one JSON object per script:
 
@@ -113,7 +113,9 @@ restore removes the entire live Texts directory, including unregistered files,
 and replaces unrelated settings too. Keep an independent full directory copy.
 Merge can overwrite unregistered files at incoming GUID paths. Archives contain
 private script content and settings. `restore` rejects unexpected archive paths,
-duplicate entries, or GUID mismatches; it does not fully validate script schema.
+duplicate entries, or GUID mismatches; it does not fully validate script schema
+or limit entry sizes. A restored script with an unrecognized shape makes the
+schema guard refuse later writes until that file is removed or replaced.
 
 PrompterKit also writes automatic pre-write snapshots (same zip format) to
 `PrompterKitBackups/` inside the data directory. This is separate from GUI
@@ -145,7 +147,8 @@ Grouped by responsibility:
 - Camera Hub lifecycle: `camerahub_is_running`, `camerahub_stop`,
   `camerahub_start` (macOS `osascript` / `open`, trying current
   `Elgato Camera Hub` and legacy `Camera Hub` app names; Windows
-  `taskkill`).
+  `tasklist`, a forced `taskkill /F`, and `start`, each resolved by bare
+  name through the normal Windows search path).
 - Diagnostics: `diagnose_camerahub`, backing the `doctor` command.
 - CLI layer: `_cmd_*` handlers and `main`, which builds the argparse
   subcommands.
@@ -161,6 +164,14 @@ A Flask app that imports the core library. It adds only web concerns:
   extensions. Uploads use generated temporary filenames.
 - Routes: `/`, `/import`, `/export/<guid>`, `/export-all`, `/delete/<guid>`,
   `/rename/<guid>`, `/reindex`. Every write route is POST and CSRF-checked.
+  Single export serves registered scripts only.
+- Host check: `_reject_untrusted_host` returns 400 unless the Host header names
+  `127.0.0.1` or `localhost`, so a web page cannot reach the GUI under its own
+  hostname.
+- Response headers: `_set_security_headers` sends a Content-Security-Policy
+  with a per-response script nonce, plus frame, content-type, and referrer
+  headers. The template has no inline event handlers; script names reach the
+  page script only through data attributes.
 - `_open_browser` opens the local browser on launch. The server binds to
   `127.0.0.1` only.
 
@@ -218,7 +229,8 @@ python3 scripts/check_agent_surfaces.py
 - `tests/test_crud.py` — delete, rename, reindex, backup, restore.
 - `tests/test_write_guard.py` — schema guard and automatic pre-write snapshots.
 - `tests/test_diagnostics.py` — `doctor` checks and Camera Hub path discovery.
-- `tests/test_gui.py` — GUI routes, CSRF protection, upload validation.
+- `tests/test_gui.py` — GUI routes, CSRF protection, upload validation, host
+  check, response headers, script-name handling.
 - `tests/fixtures/` — sanitized Camera Hub data used by the suite.
 
 Tests run against a temporary directory via `--base-dir`, never the live

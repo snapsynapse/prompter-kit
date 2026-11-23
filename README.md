@@ -39,12 +39,14 @@ and [hash record](https://prompterkit.app/.well-known/assistant-guide-transparen
 The repository checks copy and hash consistency, not full GuideCheck conformance.
 Use the [verifier](https://guidecheck.org/verify) to assess conformance; neither
 conformance nor matching hashes establish software safety.
-Level 4 is the guide-file target, not an achieved claim here. Level 5 requires
-a separate enforcing runtime. The corrected guide passed local Level 3 checks
-on 2026-09-05 with no blocking findings or warnings. Public Level 4 requires
-the v1.0.3 guide release and matching live provenance; consult the hosted
-verifier and release notes for dated results. It installs the
-reviewed app 1.0.2 with script hash checks. See [publishing and DNS steps](CONTRIBUTING.md#dns-provenance).
+Level 5 requires a separate enforcing runtime. The hosted verifier recorded
+Level 4 for guide 1.4.0 on 2026-09-05 with no blocking findings and two
+warnings, both for response headers the static host does not send. The record
+is attached to the [v1.0.3 release](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.3).
+That result is dated; rerun the verifier for the current state. The guide
+installs the reviewed app 1.0.2 with script hash checks. Unreleased changes
+listed in [CHANGELOG.md](CHANGELOG.md) are not in 1.0.2.
+See [publishing and DNS steps](CONTRIBUTING.md#dns-provenance).
 
 ### Terminal install
 
@@ -66,6 +68,8 @@ python3 prompter_kit_gui.py
 The GUI opens on loopback address `127.0.0.1`, port `5000`. It supports
 import, export, rename, delete, and an explicit Normalize indexes command.
 It does not automatically normalize indexes or provide arbitrary reorder.
+From the next release, it refuses requests whose Host header is not `127.0.0.1`
+or `localhost`, and exports registered scripts only.
 GUI Export all produces a ZIP of text files, not a backup accepted by `restore`.
 
 ### Homebrew (CLI only)
@@ -99,11 +103,11 @@ python3 prompter_kit.py import "SCRIPT_PATH" --name "SCRIPT_NAME"
 | `export` / `pull` | Export by --name or --guid; --all exports a directory; --list lists scripts. |
 | `rename` / `delete` | Change a friendly name or remove a script and its registration. |
 | `reindex` | Set order from names/GUIDs, or normalize current order when none are given. |
-| `edit` | Open chapters in $EDITOR. |
+| `edit` | Open chapters in $EDITOR, else $VISUAL, else vi or notepad. The value must be one program name without arguments. |
 | `backup` | Archive registered readable scripts plus the full AppSettings.json. |
 | `restore` | Replace library and settings from a backup; --merge adds unregistered GUIDs. |
 | `doctor` | Inspect paths, registration, missing scripts, and process state. |
-| `camerahub stop` / `start` | Control the local application. |
+| `camerahub stop` / `start` | Control the local application. On Windows, stop is a forced kill. |
 
 Most data commands accept `--base-dir` after the command name. The GUI uses
 `PROMPTERKIT_BASE_DIR`; set `PROMPTERKIT_OPEN_BROWSER=0` to suppress auto-open.

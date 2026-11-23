@@ -33,6 +33,9 @@ and produces backup zip archives. In-scope reports include:
 - Corruption of `AppSettings.json` that is not recoverable
 - Code execution triggered by a crafted `.txt`, `.md`, or backup zip
 - Remote code execution via the local web GUI (Flask app)
+- A web page reaching the local web GUI from the browser, for example through
+  DNS rebinding or cross-site request forgery
+- Script injection in the local web GUI through a script name or backup zip
 
 Out of scope:
 

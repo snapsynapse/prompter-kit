@@ -51,11 +51,18 @@ python3 scripts/check_agent_surfaces.py
 ```
 The Pages job checks these before upload. This verifies local copy/metadata
 consistency, not GuideCheck conformance or a remote release's availability.
+On 2026-11-22 the repository's Pages source was still branch deployment from
+main:/docs, which publishes docs without running this check. Until the source
+is set to GitHub Actions, the check gates only the workflow's own upload.
+The guide pins SHA-256 values for prompter_kit.py and prompter_kit_gui.py, and
+the test suite compares them with the working tree. Any edit to either file
+fails that test until a new guide version pins the new bytes and release tag.
 For a new guide, the manifest may name the next unpublished app release during
-authoring. Prepare its copies explicitly (the current candidate is v1.0.3):
-Literal
+authoring. Prepare its copies explicitly.
+Replace: RELEASE_TAG -> the unpublished release tag named in the manifest
+Customize
 ```sh
-python3 scripts/check_agent_surfaces.py --prepare-release v1.0.3 --sync
+python3 scripts/check_agent_surfaces.py --prepare-release RELEASE_TAG --sync
 ```
 This does not validate the release anchor. Commit the final guide and sidecars,
 create the new tag on that commit, and run the strict check before pushing the
@@ -79,19 +86,24 @@ Literal
 ```text
 v=1; sha256=1b73f93f9f466de6f7b5f69182535d10c65e37e1cdf4427efa15d8508dfe6558; url=https://prompterkit.app/.well-known/assistant-guide.txt
 ```
-The 2026-09-05 lookup returned NXDOMAIN for this record. Recheck before editing;
-replace an existing GuideCheck value rather than leaving conflicting hashes.
+This record is published: a 2026-11-22 lookup returned the value above. A new
+guide version needs a new hash here. Recheck before editing; replace the
+existing GuideCheck value rather than leaving conflicting hashes.
 This hash covers assistant-guide.txt bytes, not the manifest or source archive.
 
 Adding the new hash before deployment temporarily disagrees with the old live
 guide. Do not claim Level 4 during that transition. Freeze the guide bytes after
 DNS entry; further guide edits require recomputing the hash and updating DNS.
-After the operator confirms DNS, complete the separately authorized v1.0.3
+After the operator confirms DNS, complete the separately authorized
 commit/tag/release sequence above. Then check DNS propagation and byte identity
 of all live surfaces, and submit the canonical guide URL to the hosted verifier.
 Record verifier version, timestamp, guide hash, achieved level, and findings.
 Level 4 with zero blocking findings is the closeout gate. Disclose remaining
 warnings and that the hosted verifier does not establish runtime Level 5 or safety.
+Guide 1.4.0 closed this gate on 2026-09-05: hosted verifier 0.7.1, Level 4, zero
+blocking findings, two warnings (the host sends neither X-Content-Type-Options
+nor Strict-Transport-Security). The record is guidecheck-verification.json on the
+[v1.0.3 release](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.3).
 
 ## Questions
 
