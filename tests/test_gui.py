@@ -291,3 +291,63 @@ def test_import_rejects_oversized_upload(configured_client):
 
     assert response.status_code == 413
     assert list_scripts(base_dir=str(tmp_path)) == []
+
+
+@pytest.mark.parametrize("host", ["evil.example:5000", "evil.example", "127.0.0.1.evil.example:5000", "[::1]:5000"])
+def test_requests_with_foreign_host_are_refused(configured_client, host):
+    client, tmp_path = configured_client
+    _make_script(tmp_path, "GUID-ONE", "Private", ["secret"])
+
+    for path in ("/", "/export-all", "/export/GUID-ONE"):
+        response = client.get(path, headers={"Host": host})
+        assert response.status_code == 400
+        assert b"secret" not in response.data
+
+
+@pytest.mark.parametrize("host", ["127.0.0.1:5000", "localhost:5057", "LOCALHOST"])
+def test_requests_with_loopback_host_are_served(configured_client, host):
+    client, _ = configured_client
+    assert client.get("/", headers={"Host": host}).status_code == 200
+
+
+def test_script_names_never_reach_script_context(configured_client):
+    client, tmp_path = configured_client
+    payload = "');alert(1);//"
+    _make_script(tmp_path, "GUID-ONE", payload, ["line"])
+
+    html = client.get("/").get_data(as_text=True)
+
+    assert "onsubmit" not in html
+    assert "onclick" not in html
+    assert 'data-name="&#39;);alert(1);//"' in html
+    script_body = html.split("<script", 1)[1]
+    assert "alert(1)" not in script_body
+
+
+def test_responses_carry_security_headers_and_matching_nonce(configured_client):
+    client, _ = configured_client
+    response = client.get("/")
+    csp = response.headers["Content-Security-Policy"]
+    nonce = csp.split("script-src 'nonce-", 1)[1].split("'", 1)[0]
+
+    assert f'<script nonce="{nonce}">' in response.get_data(as_text=True)
+    assert "default-src 'none'" in csp
+    assert "frame-ancestors 'none'" in csp
+    assert "unsafe-inline" not in csp.split("script-src", 1)[1].split(";", 1)[0]
+    assert response.headers["X-Frame-Options"] == "DENY"
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert client.get("/").headers["Content-Security-Policy"] != csp
+
+
+def test_export_refuses_unregistered_script_file(configured_client):
+    client, tmp_path = configured_client
+    _make_script(tmp_path, "GUID-ONE", "Registered", ["line"])
+    (tmp_path / "Texts" / "ORPHAN.json").write_text(
+        json.dumps({"chapters": ["orphan text"], "friendlyName": "o", "index": 1}), encoding="utf-8"
+    )
+
+    response = client.get("/export/ORPHAN")
+
+    assert response.status_code == 302
+    assert b"orphan text" not in response.data
+    assert client.get("/export/GUID-ONE").status_code == 200

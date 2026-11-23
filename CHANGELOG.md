@@ -7,9 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Not yet released. The assistant guide still pins app 1.0.2, so the guide pin
+test fails on this tree until a new guide version pins the changed GUI file.
+
+### Security
+- GUI refuses requests whose Host header is not `127.0.0.1` or `localhost`,
+  closing access by a web page through DNS rebinding.
+- GUI no longer builds JavaScript from script names. A crafted name, for
+  example from a restored backup, could run script when Delete was clicked.
+- GUI single export serves registered scripts only.
+- GUI responses carry a Content-Security-Policy with a script nonce, plus
+  frame, content-type, and referrer headers. Session cookie is SameSite=Lax.
+
+### Fixed
+- GUI startup banner uses the PrompterKit name.
+
 ### Documentation
 - Add an optional repository standards declaration and contributor/intent
   pointers, preserving maintenance-only scope and existing verification gates.
+- Record the published DNS anchor and the dated hosted Level 4 result for
+  guide 1.4.0; remove wording that described 1.0.2 and 1.0.3 as pending.
+- Document the Pages source caveat, the guide pin test, editor fallbacks, the
+  forced stop on Windows, and restore validation limits. Extend the security
+  scope to browser-origin attacks on the local GUI.
 
 ## [1.0.3] - 2026-09-05
 

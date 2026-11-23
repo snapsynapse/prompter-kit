@@ -14,6 +14,7 @@ from flask import (
     Flask,
     abort,
     flash,
+    g,
     redirect,
     render_template_string,
     request,
@@ -36,10 +37,14 @@ from prompter_kit import (
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["PROMPTERKIT_BASE_DIR"] = os.environ.get("PROMPTERKIT_BASE_DIR")
 app.config["PROMPTERKIT_OPEN_BROWSER"] = os.environ.get("PROMPTERKIT_OPEN_BROWSER", "1") != "0"
 
 _ALLOWED_IMPORT_EXTENSIONS = {".txt", ".md"}
+# The server only listens on loopback. Refusing other Host values stops a web
+# page from reaching it under its own hostname (DNS rebinding).
+_ALLOWED_HOSTS = {"127.0.0.1", "localhost"}
 
 
 def _base_dir() -> str | None:
@@ -74,15 +79,40 @@ def _validate_csrf() -> None:
         abort(400, "Invalid CSRF token.")
 
 
+def _csp_nonce() -> str:
+    if "csp_nonce" not in g:
+        g.csp_nonce = secrets.token_urlsafe(16)
+    return g.csp_nonce
+
+
+@app.before_request
+def _reject_untrusted_host() -> None:
+    if request.host.lower().partition(":")[0] not in _ALLOWED_HOSTS:
+        abort(400, "Unrecognized Host header.")
+
+
 @app.before_request
 def _protect_post_routes() -> None:
     if request.method == "POST":
         _validate_csrf()
 
 
+@app.after_request
+def _set_security_headers(response):
+    response.headers["Content-Security-Policy"] = (
+        f"default-src 'none'; script-src 'nonce-{_csp_nonce()}'; "
+        "style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; "
+        "frame-ancestors 'none'"
+    )
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
 @app.context_processor
-def _inject_csrf_token():
-    return {"csrf_token": _csrf_token}
+def _inject_template_helpers():
+    return {"csrf_token": _csrf_token, "csp_nonce": _csp_nonce}
 
 
 def _validate_import_filename(filename: str) -> str:
@@ -275,14 +305,14 @@ _TEMPLATE = """<!doctype html>
             {{ s.friendlyName or "—" }}
             {% if s.missing %}<span class="missing-badge">MISSING</span>{% endif %}
             <!-- inline rename form -->
-            <div class="rename-form" id="rename-{{ s.guid }}">
+            <div class="rename-form" id="rename-{{ loop.index }}">
               <form method="post" action="{{ url_for('do_rename', guid=s.guid) }}"
                     style="display:flex;gap:6px;align-items:center">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="text" name="new_name" value="{{ s.friendlyName }}" required>
                 <button type="submit" class="btn btn-primary btn-sm">Save</button>
-                <button type="button" class="btn btn-secondary btn-sm"
-                        onclick="toggleRename('{{ s.guid }}')">Cancel</button>
+                <button type="button" class="btn btn-secondary btn-sm rename-toggle"
+                        data-target="rename-{{ loop.index }}">Cancel</button>
               </form>
             </div>
           </td>
@@ -292,11 +322,11 @@ _TEMPLATE = """<!doctype html>
               {% if not s.missing %}
               <a href="{{ url_for('do_export', guid=s.guid) }}" class="btn btn-secondary btn-sm">Export</a>
               {% endif %}
-              <button type="button" class="btn btn-secondary btn-sm"
-                      onclick="toggleRename('{{ s.guid }}')">Rename</button>
+              <button type="button" class="btn btn-secondary btn-sm rename-toggle"
+                      data-target="rename-{{ loop.index }}">Rename</button>
               <form method="post" action="{{ url_for('do_delete', guid=s.guid) }}"
-                    style="display:inline"
-                    onsubmit="return confirm('Delete &quot;{{ s.friendlyName|replace('\"','') }}&quot;?')">
+                    style="display:inline" class="delete-form"
+                    data-name="{{ s.friendlyName }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
               </form>
@@ -313,7 +343,7 @@ _TEMPLATE = """<!doctype html>
 
 </div><!-- /container -->
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 // Drop zone
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
@@ -356,11 +386,22 @@ function setFile(file) {
 }
 
 // Inline rename toggle
-function toggleRename(guid) {
-  const form = document.getElementById('rename-' + guid);
+function toggleRename(id) {
+  const form = document.getElementById(id);
   form.classList.toggle('open');
-  if (form.classList.contains('open')) form.querySelector('input').focus();
+  if (form.classList.contains('open')) form.querySelector('input[type=text]').focus();
 }
+document.querySelectorAll('.rename-toggle').forEach(btn => {
+  btn.addEventListener('click', () => toggleRename(btn.dataset.target));
+});
+
+// Delete confirmation. The name is read from a data attribute, never built
+// into script text.
+document.querySelectorAll('.delete-form').forEach(form => {
+  form.addEventListener('submit', e => {
+    if (!confirm('Delete "' + form.dataset.name + '"?')) e.preventDefault();
+  });
+});
 </script>
 </body>
 </html>
@@ -424,6 +465,8 @@ def do_import():
 @app.route("/export/<guid>")
 def do_export(guid):
     try:
+        if not any(s["guid"] == guid for s in list_scripts(_base_dir())):
+            raise ValueError("script is not registered.")
         data = load_script_json(guid, _base_dir())
         chapters = data.get("chapters", [])
         if not chapters:
@@ -517,5 +560,5 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     if app.config["PROMPTERKIT_OPEN_BROWSER"]:
         threading.Thread(target=_open_browser, args=(port,), daemon=True).start()
-    print(f"Prompter Tools GUI running at http://127.0.0.1:{port}")
+    print(f"PrompterKit GUI running at http://127.0.0.1:{port}")
     app.run(host="127.0.0.1", port=port, debug=False)
