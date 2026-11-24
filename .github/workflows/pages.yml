@@ -36,13 +36,13 @@ jobs:
       - name: Check published agent surfaces
         run: python3 scripts/check_agent_surfaces.py
 
-  deploy:
+  build:
     needs: test
     if: github.event_name != 'pull_request'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -56,5 +56,15 @@ jobs:
           path: docs
           # v4 and later drop dot directories by default; the guide lives in .well-known.
           include-hidden-files: true
+
+  # Deploy runs as its own job, as in GitHub's starter workflow. In the same job
+  # it raced the artifact listing and failed with "No artifacts named github-pages".
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

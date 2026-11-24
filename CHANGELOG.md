@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 - Pages artifact includes `.well-known`; upload-pages-artifact v4 and later
   drop dot directories, which briefly served 404 for the assistant guide.
+- Pages deploy runs in its own job after upload, fixing the intermittent
+  "No artifacts named github-pages" failure.
 - Record hosted GuideCheck 2.0.0 Level 3 for guide 1.5.0 with zero blocking
   findings, and set the closeout gate to the highest level the current hosted
   verifier awards. No Level 4 claim is made under profile 2.0.0.
@@ -54,8 +56,8 @@ Final security patch. Maintenance-only scope is unchanged. Assistant guide
 - CLI help for import and push mentions .md files and the editor fallback.
 - The 2026-11-24 Pages workflow run failed with "No artifacts named
   github-pages" although the upload succeeded. The action updates did not
-  remove it: the error recurred once after release and cleared on a rerun of
-  the failed job. See CONTRIBUTING.md.
+  remove it; it recurred after release. Deploy now runs as its own job after
+  the upload job, as in GitHub's starter workflow.
 
 ### Documentation
 - Add an optional repository standards declaration and contributor/intent

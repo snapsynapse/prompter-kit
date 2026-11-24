@@ -69,9 +69,9 @@ commit and tag for Pages deployment. Never move an existing tag. Publish the
 release, then verify the live guide with the hosted GuideCheck verifier.
 Under profile 2.0.0 the hosted verifier awards Levels 1 to 3 only, and local
 verification caps at Level 3. Level 5 requires a separate enforcing runtime.
-If deploy-pages fails with "No artifacts named github-pages" right after a
-successful upload, rerun the failed job; this happened twice on 2026-11-24 and
-the rerun passed without changes.
+Upload and deploy run as separate jobs. In one job, deploy-pages raced the
+artifact listing and failed with "No artifacts named github-pages" three times
+on 2026-11-24; if it recurs, rerun the deploy job.
 
 ### DNS provenance
 GuideCheck profile 2.0.0 (anchor policy 1.0.0-strict) accepts a DNS TXT hash
