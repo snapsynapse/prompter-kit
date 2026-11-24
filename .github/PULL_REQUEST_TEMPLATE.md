@@ -1,4 +1,4 @@
-Maintenance-only: no planned feature or compatibility work; review is best-effort.
+Archived 2026-11-24: this repository is read-only and takes no pull requests. Kept for forks.
 
 ## Summary
 

@@ -3,11 +3,17 @@
 Scope: this repo only (PrompterKit, Snap Synapse portfolio). Not in
 portfolio.yaml (PAICE federation only by 2026-06-09 scope decision).
 
-## Status: maintenance mode (decided 2026-06-09)
+## Status: archived (2026-11-24)
 
-PrompterKit 1.0.0 is the final feature release. No feature development or
-Camera Hub compatibility tracking is planned. Security review is best-effort,
-with no guaranteed response or remediation timeline (see SECURITY.md).
+The GitHub repository was archived on 2026-11-24 and is read-only. It takes no
+issues, pull requests or discussion posts, and no further releases or fixes
+will ship. v1.0.4 is the final release; 1.0.0 was the last feature release.
+https://prompterkit.app/ stays online as the project's record, with the record
+video. Forks are the path for anyone who needs changes.
+
+Before archiving, the project spent 2026-06-09 to 2026-11-24 in maintenance
+mode: no feature development or Camera Hub compatibility tracking, and
+best-effort security review.
 
 ## Why
 
@@ -44,9 +50,8 @@ maintenance; source plus the AI-assisted install path age better.
 
 ## What would reopen development
 
-Security reports may justify a discretionary patch. They do not automatically
-reopen development. No active monitoring of manufacturer releases is planned.
-Archive the repo if its remaining use no longer warrants keeping it active.
+Nothing planned. Reopening would mean unarchiving the repository, and a fork
+is the expected path instead. No monitoring of manufacturer releases happens.
 Schema refusals are a reason to stop writing, preserve an independent data copy,
 and use compatible read tools or a maintained fork.
 
@@ -81,6 +86,9 @@ owner-assigned levels remain unresolved.
 None recorded.
 
 ## Changelog
+
+- 2026-11-24: Archived the repository. Status, security and contribution
+  documents now describe a read-only record, not maintenance mode.
 
 - 2026-11-23: Recorded 1.0.4 as the final security patch, with guide 1.5.0,
   and the intent to archive once it ships.

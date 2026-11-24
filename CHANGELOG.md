@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+No further release will ship. These changes reach the site and the main branch
+only.
+
 ### Documentation
-- Retire the project as of 2026-11-23. prompterkit.app becomes the project
-  record: status banner, the record video (click-to-load, privacy-enhanced
+- Archive the repository on 2026-11-24. Status, security, contributing and
+  roadmap documents, and the GitHub templates, now describe a read-only record
+  instead of best-effort maintenance. README pins its clone to v1.0.4, and
+  notes that the Homebrew tap packages v1.0.4.
+- Turn prompterkit.app into the project record: status banner, the record video (click-to-load, privacy-enhanced
   embed) with its transcript, the reason it stopped, and a facts card. README
   and llms.txt carry the same status, video and reason; install commands pin
   the final release v1.0.4. The assistant guide is unchanged.

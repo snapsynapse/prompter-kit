@@ -1,12 +1,11 @@
 # Roadmap
 
-PrompterKit remains public and maintenance-only. No feature development or
-Camera Hub compatibility tracking is planned. Security reports and contributions
-receive best-effort review, without guaranteed response or fix timelines.
-Forks are welcome. The retained scope is text conversion, library management,
-registered-library backups, and CLI automation.
+There is no roadmap. The repository was archived on 2026-11-24 and is
+read-only; v1.0.4 is the final release. This file records what each release
+tightened and what was dropped. Forks are welcome. The final scope was text
+conversion, library management, registered-library backups, and CLI automation.
 
-## Supported workflow and limits
+## Final workflow and limits
 
 - Normal mutations check known schema fields; restore bypasses the live guard.
   Future format changes can still break reads and writes.

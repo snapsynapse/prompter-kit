@@ -1,11 +1,11 @@
 # PrompterKit
-Status: Retired, 2026-11-23
+Status: Archived, 2026-11-24
 
-> Local GUI and CLI for Elgato Prompter script conversion and management. Retired and unmaintained; the code stays public. Python setup required.
+> Local GUI and CLI for Elgato Prompter script conversion and management. Archived and unmaintained; the code stays public in a read-only repository. Python setup required.
 
 PrompterKit reads and writes Camera Hub's AppSettings.json and Texts/*.json to provide text conversion, library management, and registered-library backups. This summary describes PrompterKit, not the current feature set of manufacturer software.
 
-Retired on 2026-11-23. Pressuring Elgato seems to have worked. Not long after our public release, they updated Camera Hub with some of the same features. Our software is still available, but it is no longer maintained. Record video: https://youtube.com/watch?v=RsO0PZlJXsA. Final release: v1.0.4 (https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4). Code: https://github.com/snapsynapse/prompter-kit. No Camera Hub compatibility tracking continues; security reports get best-effort review at most. Forks are welcome. The schema guard checks known fields for normal mutations; restore bypasses it. Future formats may break read and write operations. Snapshots and rollback do not guarantee recovery. See [README](https://github.com/snapsynapse/prompter-kit/blob/main/README.md) and [SECURITY](https://github.com/snapsynapse/prompter-kit/blob/main/SECURITY.md).
+Archived on 2026-11-24. Pressuring Elgato seems to have worked. Not long after our public release, they updated Camera Hub with some of the same features. Our software is still available, but it is no longer maintained. Record video: https://youtube.com/watch?v=RsO0PZlJXsA. Final release: v1.0.4 (https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4). Code: https://github.com/snapsynapse/prompter-kit. The repository is read-only: no issues, pull requests or further fixes. No Camera Hub compatibility tracking continues. Forks are welcome. The schema guard checks known fields for normal mutations; restore bypasses it. Future formats may break read and write operations. Snapshots and rollback do not guarantee recovery. See [README](https://github.com/snapsynapse/prompter-kit/blob/main/README.md) and [SECURITY](https://github.com/snapsynapse/prompter-kit/blob/main/SECURITY.md).
 
 ## Key concepts
 

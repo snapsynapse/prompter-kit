@@ -4,8 +4,8 @@ about: Something isn't working
 labels: bug
 ---
 
-This project is maintenance-only. Reports receive best-effort review without
-an assured response or fix. Feature and compatibility updates are not planned.
+This repository was archived on 2026-11-24 and takes no new issues. This
+template is kept for forks.
 Do not attach private scripts, AppSettings.json, or backup ZIPs. Use private
 GitHub Security Advisories for vulnerabilities.
 

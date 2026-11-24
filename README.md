@@ -1,7 +1,8 @@
 # PrompterKit
 
-**Retired on November 23, 2026.** The code stays available and still runs, but
-it is no longer maintained. The site stays online as the project's record.
+**Archived on November 24, 2026.** The code stays available and still runs, but
+it is no longer maintained. The repository is read-only, and the site stays
+online as the project's record.
 
 [![PrompterKit, for the record (1:58)](imgs/legacy-poster.jpg)](https://youtube.com/watch?v=RsO0PZlJXsA)
 
@@ -19,9 +20,10 @@ updated Camera Hub with some of the same features. Our software is still
 available, but it's no longer maintained. The final release is [v1.0.4](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4),
 a security patch; the last feature release was 1.0.0. See [INTENT.md](INTENT.md).
 
-> No Camera Hub compatibility tracking continues, and security reports get
-> best-effort review at most, with no fix timeline. Forks are welcome. Safeguards reduce some write risks; they do not guarantee
-> compatibility or recovery. See [SECURITY.md](SECURITY.md).
+> The repository is archived: GitHub takes no new issues, pull requests or
+> discussion posts, nobody tracks Camera Hub compatibility, and no further fixes
+> or releases will ship. Forks are welcome. Safeguards reduce some write risks;
+> they do not guarantee compatibility or recovery. See [SECURITY.md](SECURITY.md).
 
 Based on [spieldbergo/elgato_prompter_text_importer](https://github.com/spieldbergo/elgato_prompter_text_importer) (MIT).
 
@@ -63,7 +65,7 @@ See [publishing and DNS steps](CONTRIBUTING.md#dns-provenance).
 On macOS or a POSIX shell, from the parent directory where you want the repo:
 Literal
 ```sh
-git clone https://github.com/snapsynapse/prompter-kit.git
+git clone --branch v1.0.4 https://github.com/snapsynapse/prompter-kit.git
 cd prompter-kit
 python3 -m venv .venv
 source .venv/bin/activate
@@ -85,7 +87,7 @@ GUI Export all produces a ZIP of text files, not a backup accepted by `restore`.
 ### Homebrew (CLI only)
 
 The separate [Homebrew tap](https://github.com/snapsynapse/homebrew-tap) installs
-the CLI; its packaged version may lag the source release.
+the CLI from the v1.0.4 release archive.
 Literal
 ```sh
 brew install snapsynapse/tap/prompter-kit
@@ -188,7 +190,7 @@ whose GUID matches an incoming script. Check `doctor` warnings first.
 PrompterKit falls back to the legacy `CameraHub` directory if only it exists.
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the supported data shape.
 
-## Verification and contributions
+## Verification and forks
 
 Install test dependencies using [CONTRIBUTING.md](CONTRIBUTING.md), then:
 Literal
@@ -208,5 +210,6 @@ Literal
 ```sh
 scripts/manual_live_eval.sh
 ```
-No new features or compatibility updates are planned. Forks are welcome; review
-of reports and contributions is best-effort. License: [MIT](LICENSE).
+No new features, compatibility updates or fixes will ship. The repository is
+archived and accepts no issues or pull requests; forks are welcome.
+License: [MIT](LICENSE).

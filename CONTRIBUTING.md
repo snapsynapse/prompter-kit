@@ -1,11 +1,11 @@
 # Contributing
 
-No new features or Camera Hub compatibility work is planned. Forks are welcome.
-Bug reports, security reports, and contributions receive best-effort review;
-there is no guaranteed response or merge timeline. See SECURITY.md for private
-vulnerability reporting.
+The repository was archived on 2026-11-24 and is read-only, so it takes no
+issues, pull requests or discussion posts. Forks are welcome. This file stays
+as the working notes for anyone who forks it. See SECURITY.md for what the
+project treated as a vulnerability.
 
-Read [INTENT.md](INTENT.md) for maintenance scope and exceptions, and
+Read [INTENT.md](INTENT.md) for project status and exceptions, and
 [repo-standards.yaml](repo-standards.yaml) for declared applicability, delivery
 maps and existing checks. The declaration records expectations, not verified
 conformance, and does not replace the native checks or publishing gates below.
@@ -29,6 +29,8 @@ On Windows, activate with `.venv\Scripts\activate` instead.
 See [ARCHITECTURE.md](ARCHITECTURE.md) for how the codebase is organized.
 
 ## Making changes
+
+These were the project's rules while it was open; a fork may keep them.
 
 - One logical change per PR.
 - Add or update tests for any changed behavior.
@@ -119,6 +121,6 @@ nor Strict-Transport-Security). The record is guidecheck-verification.json on th
 
 ## Questions
 
-Use issues or discussions with the same best-effort expectations. Include
-versions and a minimal sanitized reproduction; never post private scripts,
-settings files, or backup archives.
+Issues and discussions are closed with the archive. Existing threads stay
+readable. When asking about PrompterKit anywhere else, never post private
+scripts, settings files, or backup archives.

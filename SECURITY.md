@@ -4,25 +4,23 @@
 
 | Version | Supported |
 |---|---|
-| 1.0.4 | Best-effort security review |
-| 1.0.0 to 1.0.3 | No; upgrade to 1.0.4, which fixes browser-origin attacks on the local GUI |
+| 1.0.4 | No; final release, unmaintained since the archive |
+| 1.0.0 to 1.0.3 | No; use 1.0.4, which fixes browser-origin attacks on the local GUI |
 | < 1.0 | No |
 
-PrompterKit 1.0.x is feature-complete and in maintenance mode. No feature
-development or Camera Hub compatibility tracking is planned. Security reports
-against 1.0.x may be reviewed and addressed as maintainer capacity allows.
+The repository was archived on 2026-11-24 and is read-only. No version
+receives security fixes, and no further releases will ship. If you rely on
+PrompterKit, use 1.0.4 or a maintained fork.
 
 ## Reporting a vulnerability
 
-Please report security issues privately via GitHub Security Advisories:
+GitHub takes no new issues on an archived repository, and its documentation
+does not say whether private vulnerability reports still reach one. Either way,
+no fix will ship from this repository. Do not post vulnerability details in
+public places that point at this project.
 
-https://github.com/snapsynapse/prompter-kit/security/advisories/new
-
-Do not open a public issue for security reports.
-
-There is no guaranteed response, fix, or remediation timeline. A private report
-is welcome but does not create a commitment to issue a patch. Forks may provide
-continued support; assess their provenance independently.
+Forks may provide continued support; assess their provenance independently.
+The scope below records what the project treated as a vulnerability.
 
 ## Scope
 

@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes how PrompterKit is structured for contributors. For
+This document describes how PrompterKit is structured, for anyone who forks it. For
 usage, see [README.md](README.md).
 
 ## Overview
@@ -194,7 +194,7 @@ Five layers protect the data directory:
    and can also fail on unknown data.
 2. Automatic pre-write snapshot. `auto_backup` zips the current library to
    `PrompterKitBackups/` inside the data directory before the write, keeping
-   the up to `AUTO_BACKUP_KEEP` (20) snapshots. Disable with
+   up to `AUTO_BACKUP_KEEP` (20) snapshots. Disable with
    `PROMPTERKIT_AUTO_BACKUP=0`. Snapshots have the backup exclusions above;
    they do not guarantee that every destructive operation is reversible.
 3. Atomic writes. JSON is written to a temporary file and renamed into place,
