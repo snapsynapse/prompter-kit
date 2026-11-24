@@ -13,7 +13,7 @@ Maintenance status (November 2026): no feature development or Camera Hub compati
 - **Backup**: CLI archives readable, parseable registered scripts plus the full AppSettings.json. Missing, corrupt, and unregistered files and other Camera Hub data are excluded. Archives contain private scripts and settings.
 - **Restore**: replaces the entire Texts directory and full AppSettings.json, including unrelated settings and unregistered files. Preserve an independent full directory copy first. Merge keeps registered GUIDs but can overwrite matching unregistered files. Rollback is attempted on selected failures; recovery is not guaranteed. Restore bypasses the live schema guard and treats snapshots as best-effort.
 - **CRUD**: delete, rename, and reindex scripts without opening Camera Hub
-- **Camera Hub lifecycle**: stop and start Camera Hub via osascript/open (macOS, current and legacy app names) or taskkill (Windows)
+- **Camera Hub lifecycle**: stop and start Camera Hub via osascript/open (macOS, current and legacy app names). On Windows, tasklist and a forced taskkill run by absolute System32 path, and start launches CameraHub.exe from Program Files or the absolute path in PROMPTERKIT_CAMERAHUB_EXE, never by bare name
 - **Web GUI**: import, rename, delete, text export, and an explicit Normalize indexes command. No automatic normalization or arbitrary reorder. Export-all ZIP contains text only and is not a restorable backup. CLI handles backup, restore, and explicit reorder.
 - **CLI**: every action available as a subcommand of prompter_kit.py
 

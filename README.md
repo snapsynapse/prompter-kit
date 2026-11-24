@@ -69,8 +69,8 @@ python3 prompter_kit_gui.py
 The GUI opens on loopback address `127.0.0.1`, port `5000`. It supports
 import, export, rename, delete, and an explicit Normalize indexes command.
 It does not automatically normalize indexes or provide arbitrary reorder.
-From the next release, it refuses requests whose Host header is not `127.0.0.1`
-or `localhost`, and exports registered scripts only.
+From 1.0.4, it refuses requests whose Host header is not `127.0.0.1` or
+`localhost`, and exports registered scripts only.
 GUI Export all produces a ZIP of text files, not a backup accepted by `restore`.
 
 ### Homebrew (CLI only)

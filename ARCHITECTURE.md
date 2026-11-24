@@ -166,7 +166,8 @@ A Flask app that imports the core library. It adds only web concerns:
 
 - A `PROMPTERKIT_BASE_DIR` environment override and index parsing.
 - CSRF protection: `_csrf_token`, `_validate_csrf`, a `_protect_post_routes`
-  before-request hook, and a `_inject_csrf_token` context processor.
+  before-request hook, and an `_inject_template_helpers` context processor
+  that supplies the CSRF token and CSP nonce to the template.
 - Upload validation: `_validate_import_filename` rejects unsupported
   extensions. Uploads use generated temporary filenames.
 - Routes: `/`, `/import`, `/export/<guid>`, `/export-all`, `/delete/<guid>`,
@@ -209,10 +210,9 @@ restoring from a known-good backup.
 
 `restore` adds a validation pass before writing anything: the backup zip must
 contain a parseable `AppSettings.json`, every GUID must match
-`[A-Za-z0-9._-]+`, no unexpected paths may be present, and each script's
-embedded GUID must match its filename, entry sizes must stay under the
-limits above, and each script must pass the same known-field check the write
-guard uses. Replace mode builds a staged `Texts/`
+`[A-Za-z0-9._-]+`, no unexpected paths may be present, entry sizes must stay
+under the limits above, each script's embedded GUID must match its filename,
+and each script must pass the same known-field check the write guard uses. Replace mode builds a staged `Texts/`
 directory first, swaps it into place, and restores the prior live files if the
 swap or verification fails. Merge mode rolls back any script JSON files it
 writes if the final `AppSettings.json` update fails, preserving pre-existing
@@ -239,6 +239,8 @@ python3 scripts/check_agent_surfaces.py
 - `tests/test_write_guard.py` — schema guard and automatic pre-write snapshots.
 - `tests/test_diagnostics.py` — `doctor` checks, Camera Hub path discovery,
   lifecycle commands, and CLI flags.
+- `tests/test_agent_surfaces.py` — guide source pins, published copy and
+  metadata consistency, and release-tag checks.
 - `tests/test_gui.py` — GUI routes, CSRF protection, upload validation, host
   check, response headers, script-name handling.
 - `tests/fixtures/` — sanitized Camera Hub data used by the suite.
