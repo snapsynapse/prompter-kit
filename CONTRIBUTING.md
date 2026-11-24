@@ -49,11 +49,10 @@ Literal
 python3 scripts/check_agent_surfaces.py --sync
 python3 scripts/check_agent_surfaces.py
 ```
-The Pages job checks these before upload. This verifies local copy/metadata
+The workflow runs the test suite and this check before upload. This verifies local copy/metadata
 consistency, not GuideCheck conformance or a remote release's availability.
-On 2026-11-22 the repository's Pages source was still branch deployment from
-main:/docs, which publishes docs without running this check. Until the source
-is set to GitHub Actions, the check gates only the workflow's own upload.
+Since 2026-11-23 the Pages source is GitHub Actions, so docs publish only
+through this workflow and its checks.
 The guide pins SHA-256 values for prompter_kit.py and prompter_kit_gui.py, and
 the test suite compares them with the working tree. Any edit to either file
 fails that test until a new guide version pins the new bytes and release tag.
@@ -71,23 +70,24 @@ release, then verify the live guide with the hosted GuideCheck verifier.
 Level 4 is the guide-file target; Level 5 requires a separate enforcing runtime.
 
 ### DNS provenance
-GuideCheck 0.7.1 accepts a DNS TXT hash anchor under an independent control
-plane. Keep DNS credentials separate from website/repository credentials.
+GuideCheck profile 2.0.0 (anchor policy 1.0.0-strict) accepts a DNS TXT hash
+anchor under an independent control plane. A repository-file hash is shown as
+corroboration only and never qualifies for Level 4. Keep DNS credentials separate from website/repository credentials.
 DNSSEC is recommended. A matching TXT record alone does not establish Level 4:
 the served guide, manifest, release, and every discovered anchor must agree,
 and the guide must pass the lower-level checks.
 
-For guide 1.4.0 (8075 bytes), add one record in the prompterkit.app DNS zone:
+For guide 1.5.0 (8158 bytes), set one record in the prompterkit.app DNS zone:
 - Type: TXT
 - Host: `_assistant-guide` (full name: `_assistant-guide.prompterkit.app`)
 - TTL: 300 seconds, or the provider's lowest supported value at most 3600
 - Value: the single line below, without adding surrounding quotation marks
 Literal
 ```text
-v=1; sha256=1b73f93f9f466de6f7b5f69182535d10c65e37e1cdf4427efa15d8508dfe6558; url=https://prompterkit.app/.well-known/assistant-guide.txt
+v=1; sha256=4951e74f82541748d94455eca72af00df65824df521c47af87ddfa874770f083; url=https://prompterkit.app/.well-known/assistant-guide.txt
 ```
-This record is published: a 2026-11-22 lookup returned the value above. A new
-guide version needs a new hash here. Recheck before editing; replace the
+This replaces the guide 1.4.0 value (sha256=1b73f93f...6558), which a
+2026-11-22 lookup showed as published. A new guide version needs a new hash here. Recheck before editing; replace the
 existing GuideCheck value rather than leaving conflicting hashes.
 This hash covers assistant-guide.txt bytes, not the manifest or source archive.
 

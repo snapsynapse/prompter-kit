@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import json
+import ntpath
 import os
 import re
 import shutil
@@ -13,7 +14,14 @@ import uuid
 import zipfile
 
 
+__version__ = "1.0.4"
+
 LIBRARY_KEY = "applogic.prompter.libraryList"
+
+# Restore reads archive entries into memory. Real script JSON is a few
+# kilobytes, so these ceilings only refuse crafted or unrelated archives.
+_RESTORE_MAX_ENTRY_BYTES = 16 * 1024 * 1024
+_RESTORE_MAX_TOTAL_BYTES = 256 * 1024 * 1024
 
 
 # ---------------------------------------------------------------------------
@@ -311,8 +319,10 @@ def _pre_write_guard(base_dir: str | None = None, *, check_schema: bool = True) 
 # ---------------------------------------------------------------------------
 
 _MD_STRIP: list[tuple[re.Pattern, str]] = [
-    (re.compile(r"!\[([^\]]*)\]\([^)]*\)"), r"\1"),   # images -> alt text
-    (re.compile(r"\[([^\]]+)\]\([^)]*\)"), r"\1"),    # links -> label
+    # Spans exclude '[' so every scan stops at the next bracket. That keeps
+    # stripping linear on long lines of unclosed '![' or '[a](' sequences.
+    (re.compile(r"!\[([^\[\]]*)\]\([^)\[]*\)"), r"\1"),   # images -> alt text
+    (re.compile(r"\[([^\[\]]+)\]\([^)\[]*\)"), r"\1"),    # links -> label
     (re.compile(r"~~(.+?)~~"), r"\1"),                 # strikethrough
     (re.compile(r"\*{3}(.+?)\*{3}"), r"\1"),           # bold+italic ***
     (re.compile(r"\*{2}(.+?)\*{2}"), r"\1"),           # bold **
@@ -825,6 +835,20 @@ def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) 
         if len(names) != len(set(names)):
             raise ValueError("Backup contains duplicate archive paths")
 
+        declared_total = 0
+        for info in zf.infolist():
+            if info.file_size > _RESTORE_MAX_ENTRY_BYTES:
+                raise ValueError(
+                    f"Backup entry '{info.filename}' is {info.file_size} bytes, "
+                    f"over the {_RESTORE_MAX_ENTRY_BYTES} byte limit"
+                )
+            declared_total += info.file_size
+        if declared_total > _RESTORE_MAX_TOTAL_BYTES:
+            raise ValueError(
+                f"Backup expands to {declared_total} bytes, "
+                f"over the {_RESTORE_MAX_TOTAL_BYTES} byte limit"
+            )
+
         try:
             backup_settings = json.loads(zf.read("AppSettings.json"))
         except json.JSONDecodeError as e:
@@ -860,6 +884,11 @@ def restore(backup_path: str, merge: bool = False, base_dir: str | None = None) 
                 raise ValueError(f"Backup script '{guid}' must be a JSON object")
             if script_data.get("GUID") not in ("", None, guid):
                 raise ValueError(f"Backup script '{guid}' has mismatched GUID metadata")
+            # Refuse shapes the write guard would reject later. Writing one
+            # would block every later import, rename, delete, and edit.
+            problem = _script_schema_problem(script_data, guid)
+            if problem:
+                raise ValueError(f"Backup script '{guid}': {problem}")
             script_data["GUID"] = guid
             backup_scripts[guid] = script_data
 
@@ -1008,7 +1037,7 @@ def camerahub_is_running() -> bool | None:
         return False if saw_known_app else None
     if sys.platform == "win32":
         result = subprocess.run(
-            ["tasklist", "/FI", f"IMAGENAME eq {_CAMERAHUB_WIN_EXE}"],
+            [_win_system_tool("tasklist.exe"), "/FI", f"IMAGENAME eq {_CAMERAHUB_WIN_EXE}"],
             capture_output=True,
             text=True,
             check=False,
@@ -1090,10 +1119,54 @@ def diagnose_camerahub(base_dir: str | None = None) -> list[dict]:
 
 _CAMERAHUB_APP_NAMES = ("Elgato Camera Hub", "Camera Hub")
 _CAMERAHUB_WIN_EXE = "CameraHub.exe"
+_CAMERAHUB_WIN_EXE_ENV = "PROMPTERKIT_CAMERAHUB_EXE"
+_CAMERAHUB_WIN_INSTALL_DIRS = (
+    ntpath.join("Elgato", "CameraHub"),
+    ntpath.join("Elgato", "Camera Hub"),
+)
+
+
+def _win_system_tool(name: str) -> str:
+    """Return the absolute System32 path of a Windows system tool.
+
+    Bare names are searched in the current directory before System32, so a
+    planted tasklist.exe or taskkill.exe in the working folder would run.
+    """
+    system_root = os.environ.get("SystemRoot") or os.environ.get("WINDIR") or r"C:\Windows"
+    return ntpath.join(system_root, "System32", name)
+
+
+def _win_camerahub_exe() -> str:
+    """Return the absolute path of the Camera Hub executable on Windows.
+
+    Checks the PROMPTERKIT_CAMERAHUB_EXE override, then the usual install
+    folders under Program Files. Never searches the current directory or PATH.
+    """
+    override = os.environ.get(_CAMERAHUB_WIN_EXE_ENV, "").strip()
+    if override:
+        if ntpath.isabs(override) and os.path.isfile(override):
+            return override
+        raise FileNotFoundError(
+            f"{_CAMERAHUB_WIN_EXE_ENV} must be an absolute path to an existing file: {override!r}"
+        )
+    roots = []
+    for var in ("ProgramFiles", "ProgramW6432", "ProgramFiles(x86)"):
+        root = os.environ.get(var, "").strip()
+        if root and ntpath.isabs(root) and root not in roots:
+            roots.append(root)
+    for root in roots:
+        for sub in _CAMERAHUB_WIN_INSTALL_DIRS:
+            candidate = ntpath.join(root, sub, _CAMERAHUB_WIN_EXE)
+            if os.path.isfile(candidate):
+                return candidate
+    raise FileNotFoundError(
+        f"Could not find {_CAMERAHUB_WIN_EXE} under Program Files. "
+        f"Set {_CAMERAHUB_WIN_EXE_ENV} to its absolute path, or start Camera Hub yourself."
+    )
 
 
 def camerahub_stop(wait: bool = False, timeout: float = 10.0) -> None:
-    """Quit Camera Hub gracefully."""
+    """Quit Camera Hub. Graceful on macOS; a forced stop (taskkill /F) on Windows."""
     if sys.platform == "darwin":
         for app_name in _CAMERAHUB_APP_NAMES:
             subprocess.run(
@@ -1103,7 +1176,7 @@ def camerahub_stop(wait: bool = False, timeout: float = 10.0) -> None:
                 check=False,
             )
     elif sys.platform == "win32":
-        subprocess.run(["taskkill", "/IM", _CAMERAHUB_WIN_EXE, "/F"], check=False)
+        subprocess.run([_win_system_tool("taskkill.exe"), "/IM", _CAMERAHUB_WIN_EXE, "/F"], check=False)
     else:
         raise EnvironmentError(f"camerahub stop not supported on {sys.platform}")
 
@@ -1132,7 +1205,8 @@ def camerahub_start() -> None:
         if last_error is not None:
             raise last_error
     elif sys.platform == "win32":
-        subprocess.run(["start", "", _CAMERAHUB_WIN_EXE], shell=True, check=True)
+        # Launch by absolute path without a shell; Popen returns once started.
+        subprocess.Popen([_win_camerahub_exe()], close_fds=True)
     else:
         raise EnvironmentError(f"camerahub start not supported on {sys.platform}")
 
@@ -1350,6 +1424,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Import/export scripts for Elgato Prompter (Camera Hub)."
     )
+    parser.add_argument("--version", action="version", version=f"PrompterKit {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
     data_parent = argparse.ArgumentParser(add_help=False)
     data_parent.add_argument(
@@ -1358,15 +1433,15 @@ def main() -> None:
     )
 
     # import subcommand
-    p_import = sub.add_parser("import", parents=[data_parent], help="Import a .txt file as a Prompter script")
-    p_import.add_argument("text_file", help="Path to the .txt script file")
+    p_import = sub.add_parser("import", parents=[data_parent], help="Import a .txt or .md file as a Prompter script")
+    p_import.add_argument("text_file", help="Path to the .txt or .md script file")
     p_import.add_argument("--name", required=True, help="Friendly name for the script")
     p_import.add_argument("--index", type=int, default=0, help="Order index (default: 0)")
     p_import.add_argument("--restart", action="store_true", help="Stop Camera Hub before import and restart after")
 
     # push alias
     p_push = sub.add_parser("push", parents=[data_parent], help="Alias for import: push a local script into Camera Hub")
-    p_push.add_argument("text_file", help="Path to the .txt script file")
+    p_push.add_argument("text_file", help="Path to the .txt or .md script file")
     p_push.add_argument("--name", required=True, help="Friendly name for the script")
     p_push.add_argument("--index", type=int, default=0, help="Order index (default: 0)")
     p_push.add_argument("--restart", action="store_true", help="Stop Camera Hub before push and restart after")
@@ -1405,7 +1480,7 @@ def main() -> None:
     )
 
     # edit subcommand
-    p_edit = sub.add_parser("edit", parents=[data_parent], help="Open a script's chapters in $EDITOR")
+    p_edit = sub.add_parser("edit", parents=[data_parent], help="Open a script's chapters in $EDITOR (falls back to $VISUAL, then vi or notepad)")
     p_edit.add_argument("name_or_guid", help="Script friendly name or GUID")
 
     # backup subcommand

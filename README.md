@@ -8,7 +8,7 @@ Markdown, export text, rename, delete, reorder, and create library backups.
 Site: https://prompterkit.app/
 Repo: https://github.com/snapsynapse/prompter-kit
 
-> Maintenance-only, reviewed September 2026. No feature development or Camera
+> Maintenance-only, reviewed November 2026. No feature development or Camera
 > Hub compatibility tracking is planned. Security reports receive best-effort
 > review, with no guaranteed response or fix timeline. Forks are welcome.
 > Safeguards reduce some write risks; they do not guarantee compatibility or
@@ -33,19 +33,19 @@ Based on [spieldbergo/elgato_prompter_text_importer](https://github.com/spieldbe
 The [assistant guide](https://prompterkit.app/.well-known/assistant-guide.txt)
 provides structured setup actions and approval gates. Explain and approve
 commands individually; do not upload local scripts or backups to an assistant.
-Guide 1.4.0 targets the [GuideCheck](https://guidecheck.org/) 0.7.1 profile and publishes
+Guide 1.5.0 targets the [GuideCheck](https://guidecheck.org/) 2.0.0 profile and publishes
 a [manifest](https://prompterkit.app/.well-known/assistant-guide-manifest.txt)
 and [hash record](https://prompterkit.app/.well-known/assistant-guide-transparency-log.txt).
 The repository checks copy and hash consistency, not full GuideCheck conformance.
 Use the [verifier](https://guidecheck.org/verify) to assess conformance; neither
 conformance nor matching hashes establish software safety.
-Level 5 requires a separate enforcing runtime. The hosted verifier recorded
-Level 4 for guide 1.4.0 on 2026-09-05 with no blocking findings and two
-warnings, both for response headers the static host does not send. The record
-is attached to the [v1.0.3 release](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.3).
-That result is dated; rerun the verifier for the current state. The guide
-installs the reviewed app 1.0.2 with script hash checks. Unreleased changes
-listed in [CHANGELOG.md](CHANGELOG.md) are not in 1.0.2.
+Level 5 requires a separate enforcing runtime. The guide installs the
+reviewed app 1.0.4 with script hash checks. The hosted verifier recorded
+Level 4 for the previous guide 1.4.0 on 2026-09-05 (record on the
+[v1.0.3 release](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.3));
+guide 1.5.0 has its own result on the
+[v1.0.4 release](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4)
+once verified. Results are dated; rerun the verifier for the current state.
 See [publishing and DNS steps](CONTRIBUTING.md#dns-provenance).
 
 ### Terminal install
@@ -105,9 +105,10 @@ python3 prompter_kit.py import "SCRIPT_PATH" --name "SCRIPT_NAME"
 | `reindex` | Set order from names/GUIDs, or normalize current order when none are given. |
 | `edit` | Open chapters in $EDITOR, else $VISUAL, else vi or notepad. The value must be one program name without arguments. |
 | `backup` | Archive registered readable scripts plus the full AppSettings.json. |
-| `restore` | Replace library and settings from a backup; --merge adds unregistered GUIDs. |
+| `restore` | Replace library and settings from a backup; --merge adds unregistered GUIDs. Refuses oversized archives and scripts that fail the schema check. |
 | `doctor` | Inspect paths, registration, missing scripts, and process state. |
-| `camerahub stop` / `start` | Control the local application. On Windows, stop is a forced kill. |
+| `--version` | Print the installed PrompterKit version (1.0.4 and later). |
+| `camerahub stop` / `start` | Control the local application. On Windows, stop is a forced kill and start looks only under Program Files or at the absolute path in `PROMPTERKIT_CAMERAHUB_EXE`. |
 
 Most data commands accept `--base-dir` after the command name. The GUI uses
 `PROMPTERKIT_BASE_DIR`; set `PROMPTERKIT_OPEN_BROWSER=0` to suppress auto-open.

@@ -490,3 +490,22 @@ def test_slugify_special_chars():
 
 def test_slugify_empty_fallback():
     assert _slugify("!!!") == "script"
+
+
+# ---------------------------------------------------------------------------
+# strip_markdown stays linear on hostile input (1.0.4)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("unit", ["![", "[a](", "[", "!["  + "x" * 10])
+def test_strip_markdown_is_fast_on_unclosed_brackets(unit):
+    import time
+
+    text = unit * (200_000 // len(unit))
+    start = time.perf_counter()
+    strip_markdown(text)
+    assert time.perf_counter() - start < 2.0
+
+
+def test_strip_markdown_still_strips_links_and_images():
+    assert strip_markdown("See [the docs](https://example.com/a_(b)) now") == "See the docs) now"
+    assert strip_markdown("![alt text](img.png) and [label](u)") == "alt text and label"

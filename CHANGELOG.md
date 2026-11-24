@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Not yet released. The assistant guide still pins app 1.0.2, so the guide pin
-test fails on this tree until a new guide version pins the changed GUI file.
+## [1.0.4] - 2026-11-23
+
+Final security patch. Maintenance-only scope is unchanged. Assistant guide
+1.5.0 pins this release and moves from GuideCheck profile 0.7.1 to 2.0.0.
 
 ### Security
 - GUI refuses requests whose Host header is not `127.0.0.1` or `localhost`,
@@ -18,9 +20,34 @@ test fails on this tree until a new guide version pins the changed GUI file.
 - GUI single export serves registered scripts only.
 - GUI responses carry a Content-Security-Policy with a script nonce, plus
   frame, content-type, and referrer headers. Session cookie is SameSite=Lax.
+- `restore` refuses archive entries over 16 MiB or a total over 256 MiB, and
+  scripts whose known fields fail the schema check. Before, a crafted archive
+  could exhaust memory, or restore a script that blocked every later write.
+- Windows: `tasklist` and `taskkill` run by absolute System32 path, and Camera
+  Hub starts from Program Files (or the absolute path in
+  `PROMPTERKIT_CAMERAHUB_EXE`) without a shell. Bare names could run a program
+  planted in the working folder. Covered by mocked tests, not run on Windows.
+- Markdown link and image stripping is linear on long lines of unclosed
+  brackets (previously quadratic: 4.8 s for 40 KB). Nested `[` inside a link
+  label or URL is now left as text.
+- CI runs the test suite before deploying Pages, actions are pinned by commit
+  SHA and updated to current majors, and Dependabot watches pip and Actions.
+
+### Added
+- `--version` flag.
+
+### Changed
+- Assistant guide 1.5.0 declares GuideCheck profile 2.0.0. The venv step is
+  inline Python instead of `python -m venv`, which 2.0.0 treats as an
+  unresolved execution target, and dependencies install with `.venv/bin/pip`.
+  The manifest declares the profile, canonical URL and repository URL.
 
 ### Fixed
 - GUI startup banner uses the PrompterKit name.
+- CLI help for import and push mentions .md files and the editor fallback.
+- The 2026-11-24 Pages workflow run failed with "No artifacts named
+  github-pages" although the upload succeeded. The action updates above are
+  the expected fix; the next workflow run confirms it.
 
 ### Documentation
 - Add an optional repository standards declaration and contributor/intent

@@ -57,13 +57,21 @@ while keeping the repo public in maintenance-only state. Documentation and
 agent surfaces reflect actual limitations and best-effort support. This is a
 bounded cleanup, not a new feature roadmap.
 
+## Final security patch (November 2026)
+
+1.0.4 ships the 2026-11-22 security audit fixes: local GUI browser-origin
+hardening, restore input limits, Windows absolute-path process calls, linear
+Markdown stripping, CI tests before Pages deploy, SHA-pinned actions and
+Dependabot. It is a patch, not a reopen. Unless a new security report arrives,
+1.0.4 is the last planned release and the repo can be archived after it ships.
+
 ## Repository standards declaration
 
 [repo-standards.yaml](repo-standards.yaml) records optional applicability,
 source and delivery maps, and existing verification expectations. This INTENT
 remains authoritative for purpose, maintenance boundaries and exceptions.
 The declaration does not certify conformance or reopen feature development.
-Guide 1.4.0, GuideCheck profile 0.7.1 and app 1.0.2 remain separate identities;
+Guide 1.5.0, GuideCheck profile 2.0.0 and app 1.0.4 remain separate identities;
 [CONTRIBUTING.md](CONTRIBUTING.md#agent-guide-publishing) retains the existing
 publishing gates and hosted Level 4 target. AI Posture applicability and
 owner-assigned levels remain unresolved.
@@ -73,6 +81,9 @@ owner-assigned levels remain unresolved.
 None recorded.
 
 ## Changelog
+
+- 2026-11-23: Recorded 1.0.4 as the final security patch, with guide 1.5.0,
+  and the intent to archive once it ships.
 
 - 2026-09-08: Added an optional repository standards declaration without
   changing maintenance scope, version identities or publishing gates.

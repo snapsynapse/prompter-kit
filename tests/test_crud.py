@@ -493,3 +493,67 @@ def test_restore_rejects_mismatched_script_guid(tmp_path):
 def test_restore_missing_file_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
         restore("/nonexistent/path/backup.zip", base_dir=str(tmp_path))
+
+
+# ---------------------------------------------------------------------------
+# restore input limits (1.0.4)
+# ---------------------------------------------------------------------------
+
+def _write_archive(path, settings, scripts):
+    with zipfile.ZipFile(path, "w") as zf:
+        zf.writestr("AppSettings.json", json.dumps(settings))
+        for guid, data in scripts.items():
+            zf.writestr(f"Texts/{guid}.json", json.dumps(data))
+
+
+@pytest.mark.parametrize("merge", [False, True])
+def test_restore_rejects_script_with_bad_schema_before_writing(tmp_path, merge):
+    dst = tmp_path / "dst"
+    dst.mkdir()
+    _setup(dst, [("G1", "Alpha", ["keep"], 0)])
+    before = (dst / "AppSettings.json").read_bytes()
+    archive = tmp_path / "bad.zip"
+    _write_archive(
+        archive,
+        {LIBRARY_KEY: ["G9"]},
+        {"G9": {"GUID": "G9", "friendlyName": "Bad", "chapters": "notalist", "index": 0}},
+    )
+
+    with pytest.raises(ValueError, match="chapters"):
+        restore(str(archive), merge=merge, base_dir=str(dst))
+
+    assert not (dst / "Texts" / "G9.json").exists()
+    assert (dst / "AppSettings.json").read_bytes() == before
+    # The library stays writable afterwards.
+    rename_script("Alpha", "Alpha 2", base_dir=str(dst))
+
+
+def test_restore_rejects_oversized_entry(tmp_path, monkeypatch):
+    monkeypatch.setattr(prompter_kit, "_RESTORE_MAX_ENTRY_BYTES", 1024)
+    dst = tmp_path / "dst"
+    dst.mkdir()
+    archive = tmp_path / "big.zip"
+    _write_archive(
+        archive,
+        {LIBRARY_KEY: ["G1"]},
+        {"G1": {"GUID": "G1", "friendlyName": "Big", "chapters": ["x" * 4096], "index": 0}},
+    )
+
+    with pytest.raises(ValueError, match="byte limit"):
+        restore(str(archive), base_dir=str(dst))
+    assert not (dst / "Texts" / "G1.json").exists()
+
+
+def test_restore_rejects_oversized_total(tmp_path, monkeypatch):
+    monkeypatch.setattr(prompter_kit, "_RESTORE_MAX_TOTAL_BYTES", 2048)
+    dst = tmp_path / "dst"
+    dst.mkdir()
+    archive = tmp_path / "total.zip"
+    scripts = {
+        f"G{i}": {"GUID": f"G{i}", "friendlyName": f"S{i}", "chapters": ["y" * 900], "index": i}
+        for i in range(4)
+    }
+    _write_archive(archive, {LIBRARY_KEY: list(scripts)}, scripts)
+
+    with pytest.raises(ValueError, match="byte limit"):
+        restore(str(archive), base_dir=str(dst))

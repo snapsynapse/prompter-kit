@@ -1,5 +1,5 @@
 canonical-url: https://prompterkit.app/.well-known/assistant-guide.txt
-guide-version: 1.4.0
-guide-sha256: 1b73f93f9f466de6f7b5f69182535d10c65e37e1cdf4427efa15d8508dfe6558
-logged-at: 2026-09-05T20:02:00Z
-log-note: Guide 1.4.0 for GuideCheck 0.7.1; installs app 1.0.2; guide publication anchor https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.3.
+guide-version: 1.5.0
+guide-sha256: 4951e74f82541748d94455eca72af00df65824df521c47af87ddfa874770f083
+logged-at: 2026-11-24T03:24:12Z
+log-note: Guide 1.5.0 for GuideCheck profile 2.0.0; installs app 1.0.4 security patch; guide publication anchor https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4.

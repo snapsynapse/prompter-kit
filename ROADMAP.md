@@ -30,6 +30,14 @@ registered-library backups, and CLI automation.
 - Align published agent-guide copies and check their hashes before deployment.
 - Correct support, backup, conversion, and compatibility claims.
 
+## What 1.0.4 tightens
+
+- Local GUI: Host allowlist against DNS rebinding, no JavaScript built from
+  script names, registered-only export, CSP and security headers.
+- Restore refuses oversized archives and scripts that fail the schema check.
+- Windows lifecycle commands no longer resolve programs by bare name.
+- Markdown stripping stays linear on hostile input; `--version` added.
+
 ## Dropped plans
 
 The earlier roadmap item for a standalone double-click app (PyInstaller

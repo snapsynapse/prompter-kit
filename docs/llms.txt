@@ -4,7 +4,7 @@
 
 PrompterKit reads and writes Camera Hub's AppSettings.json and Texts/*.json to provide text conversion, library management, and registered-library backups. This summary describes PrompterKit, not the current feature set of manufacturer software.
 
-Maintenance status (September 2026): no feature development or Camera Hub compatibility tracking is planned. Security reports receive best-effort review without guaranteed response or remediation timelines. Forks are welcome. The schema guard checks known fields for normal mutations; restore bypasses it. Future formats may break read and write operations. Snapshots and rollback do not guarantee recovery. See [README](https://github.com/snapsynapse/prompter-kit/blob/main/README.md) and [SECURITY](https://github.com/snapsynapse/prompter-kit/blob/main/SECURITY.md).
+Maintenance status (November 2026): no feature development or Camera Hub compatibility tracking is planned. Security reports receive best-effort review without guaranteed response or remediation timelines. Forks are welcome. The schema guard checks known fields for normal mutations; restore bypasses it. Future formats may break read and write operations. Snapshots and rollback do not guarantee recovery. See [README](https://github.com/snapsynapse/prompter-kit/blob/main/README.md) and [SECURITY](https://github.com/snapsynapse/prompter-kit/blob/main/SECURITY.md).
 
 ## Key concepts
 
@@ -19,10 +19,10 @@ Maintenance status (September 2026): no feature development or Camera Hub compat
 
 ## Evidence and publishing
 
-The June 2026 macOS live eval passed but did not record the Camera Hub version. Automated tests use sanitized fixtures; they do not establish current-version compatibility. This summary describes 1.0.2 behavior. The scripts carry no version identifier; compare the checkout's release tag with the changelog before relying on it.
+The June 2026 macOS live eval passed but did not record the Camera Hub version. Automated tests use sanitized fixtures; they do not establish current-version compatibility. This summary describes 1.0.4 behavior. From 1.0.4, `python3 prompter_kit.py --version` prints the installed version; for older checkouts, compare the release tag with the changelog.
 
-Root assistant-guide files are authoritative; docs/.well-known copies are published. Guide 1.4.0 targets GuideCheck 0.7.1 and installs app 1.0.2 with script hash checks. Its guide-byte anchor is v1.0.3. Level 4 is the guide-file target; no Level 5 runtime claim is made. Local checks do not establish live provenance or software safety.
-The hosted GuideCheck 0.7.1 verifier recorded Level 4 for guide 1.4.0 on 2026-09-05 with zero blocking findings and two response-header warnings; the record is attached to the v1.0.3 release. That result is dated; rerun the hosted verifier for the current state. The exact TXT record and publication sequence are documented in CONTRIBUTING.md; do not infer Level 4 from a declared profile or DNS entry alone.
+Root assistant-guide files are authoritative; docs/.well-known copies are published. Guide 1.5.0 targets GuideCheck profile 2.0.0 (corrected-content-1 content policy, 1.0.0-strict anchor policy, so the repository copy cannot count as an independent anchor) and installs app 1.0.4 with script hash checks. Its guide-byte anchor is v1.0.4. Level 4 is the guide-file target; no Level 5 runtime claim is made. Local checks do not establish live provenance or software safety.
+The hosted GuideCheck 0.7.1 verifier recorded Level 4 for the previous guide 1.4.0 on 2026-09-05 with zero blocking findings and two response-header warnings; the record is attached to the v1.0.3 release. Guide 1.5.0 results are attached to the v1.0.4 release once verified. Results are dated; rerun the hosted verifier for the current state. The exact TXT record and publication sequence are documented in CONTRIBUTING.md; do not infer Level 4 from a declared profile or DNS entry alone.
 
 ## Key files
 

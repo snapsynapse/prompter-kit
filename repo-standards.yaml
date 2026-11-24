@@ -15,8 +15,8 @@ surfaces:
     producer: manual
     delivery: >-
       Python source delivered through repository checkout and release source
-      archives. The current assistant guide pins app 1.0.2; the guide release
-      anchor v1.0.3 is a separate identity. No standalone binary is planned.
+      archives. The current assistant guide 1.5.0 pins app 1.0.4 and anchors on
+      the v1.0.4 release. No standalone binary is planned.
   website:
     kind: website
     sources:
@@ -81,9 +81,9 @@ standards:
   guidecheck:
     applicability: applicable
     adoption: adopted
-    profile: human-verifiable-assistant-guide 0.7.1
+    profile: human-verifiable-assistant-guide 2.0.0
     reason: >-
-      The published-guide contract declares guide 1.4.0 for app 1.0.2. Adoption
+      The published-guide contract declares guide 1.5.0 for app 1.0.4. Adoption
       records that implementation, not an achieved level. CONTRIBUTING.md retains
       the hosted Level 4 target with zero blocking findings and disclosure of
       remaining warnings; Level 5 needs a separate enforcing runtime. Local

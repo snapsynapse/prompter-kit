@@ -100,6 +100,6 @@ def test_guide_binds_executed_scripts_and_local_imports():
                 if module and (ROOT / (module.split(".")[0] + ".py")).is_file():
                     assert module.split(".")[0] + ".py" in pinned
     clone = next(a for a in actions if a["id"] == "clone-repo")
-    assert "--branch v1.0.2 --depth 1" in clone["command"]
+    assert "--branch v1.0.4 --depth 1" in clone["command"]
     verify = next(a for a in actions if a["id"] == "verify-source")
     assert set(shlex.split(verify["command"])[3:]) == pinned

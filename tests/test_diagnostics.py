@@ -445,3 +445,118 @@ def test_cli_base_dir_works_for_mutating_commands_and_backup_restore(tmp_path):
     )
     assert delete.returncode == 0, delete.stderr
     assert list_scripts(base_dir=str(tmp_path)) == []
+
+
+# ---------------------------------------------------------------------------
+# Windows process lookups use absolute paths (1.0.4)
+# ---------------------------------------------------------------------------
+
+def _clear_windows_env(monkeypatch):
+    for var in ("SystemRoot", "WINDIR", "ProgramFiles", "ProgramW6432", "ProgramFiles(x86)",
+                prompter_kit._CAMERAHUB_WIN_EXE_ENV):
+        monkeypatch.delenv(var, raising=False)
+
+
+def test_windows_running_check_calls_tasklist_by_absolute_path(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    _clear_windows_env(monkeypatch)
+    monkeypatch.setenv("SystemRoot", r"D:\Win")
+    calls = []
+
+    def fake_run(cmd, capture_output=False, text=False, check=False):
+        calls.append(cmd)
+        return SimpleNamespace(returncode=0, stdout="CameraHub.exe 1234")
+
+    monkeypatch.setattr(prompter_kit.subprocess, "run", fake_run)
+
+    assert prompter_kit.camerahub_is_running() is True
+    assert calls[0][0] == r"D:\Win\System32\tasklist.exe"
+
+
+def test_windows_stop_calls_taskkill_by_absolute_path(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    _clear_windows_env(monkeypatch)
+    calls = []
+
+    def fake_run(cmd, check=False, **kwargs):
+        calls.append(cmd)
+        return SimpleNamespace(returncode=0, stdout="")
+
+    monkeypatch.setattr(prompter_kit.subprocess, "run", fake_run)
+
+    prompter_kit.camerahub_stop()
+    assert calls == [[r"C:\Windows\System32\taskkill.exe", "/IM", "CameraHub.exe", "/F"]]
+
+
+def test_windows_start_launches_resolved_install_path_without_shell(monkeypatch, tmp_path):
+    monkeypatch.setattr(sys, "platform", "win32")
+    _clear_windows_env(monkeypatch)
+    expected = r"E:\Apps\Elgato\Camera Hub\CameraHub.exe"
+    monkeypatch.setenv("ProgramFiles", r"E:\Apps")
+    monkeypatch.setattr(prompter_kit.os.path, "isfile", lambda path: path == expected)
+    launched = []
+
+    def fake_popen(cmd, **kwargs):
+        launched.append((cmd, kwargs))
+        return SimpleNamespace(pid=1)
+
+    def no_run(*args, **kwargs):
+        raise AssertionError("start must not go through subprocess.run or a shell")
+
+    monkeypatch.setattr(prompter_kit.subprocess, "Popen", fake_popen)
+    monkeypatch.setattr(prompter_kit.subprocess, "run", no_run)
+
+    prompter_kit.camerahub_start()
+    assert launched == [([expected], {"close_fds": True})]
+
+
+def test_windows_start_honors_absolute_override(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    _clear_windows_env(monkeypatch)
+    override = r"F:\Custom\CameraHub.exe"
+    monkeypatch.setenv(prompter_kit._CAMERAHUB_WIN_EXE_ENV, override)
+    monkeypatch.setattr(prompter_kit.os.path, "isfile", lambda path: path == override)
+    launched = []
+    monkeypatch.setattr(prompter_kit.subprocess, "Popen", lambda cmd, **kw: launched.append(cmd))
+
+    prompter_kit.camerahub_start()
+    assert launched == [[override]]
+
+
+def test_windows_start_refuses_relative_override_and_bare_name(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    _clear_windows_env(monkeypatch)
+    monkeypatch.setattr(prompter_kit.os.path, "isfile", lambda path: True)
+    launched = []
+    monkeypatch.setattr(prompter_kit.subprocess, "Popen", lambda cmd, **kw: launched.append(cmd))
+
+    monkeypatch.setenv(prompter_kit._CAMERAHUB_WIN_EXE_ENV, "CameraHub.exe")
+    with pytest.raises(FileNotFoundError):
+        prompter_kit.camerahub_start()
+
+    monkeypatch.delenv(prompter_kit._CAMERAHUB_WIN_EXE_ENV)
+    with pytest.raises(FileNotFoundError):
+        prompter_kit.camerahub_start()
+    assert launched == []
+
+
+def test_cli_version_flag():
+    result = subprocess.run(
+        [sys.executable, _script_path(), "--version"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0
+    assert result.stdout.strip() == f"PrompterKit {prompter_kit.__version__}"
+
+
+def test_cli_import_help_mentions_markdown():
+    result = subprocess.run(
+        [sys.executable, _script_path(), "import", "--help"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0
+    assert ".md" in result.stdout

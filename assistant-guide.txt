@@ -3,17 +3,17 @@ Assistant Guide: PrompterKit local install
 [assistant-guide-metadata]
 identifier: assistant-guide
 profile: human-verifiable-assistant-guide
-profile-version: 0.7.1
-guide-version: 1.4.0
-applies-to: prompterkit ==1.0.2
+profile-version: 2.0.0
+guide-version: 1.5.0
+applies-to: prompterkit ==1.0.4
 canonical-url: https://prompterkit.app/.well-known/assistant-guide.txt
 repository-url: https://github.com/snapsynapse/prompter-kit
 source-path: docs/.well-known/assistant-guide.txt
-last-reviewed: 2026-09-05
+last-reviewed: 2026-11-23
 reviewed-by: https://github.com/snapsynapse/prompter-kit
 status: active
 recommended-verifier: https://guidecheck.org/verify
-verifier-conformance: human-verifiable-assistant-guide-verifier >=0.7.1, <0.8.0
+verifier-conformance: human-verifiable-assistant-guide-verifier >=2.0.0, <3.0.0
 manifest-url: https://prompterkit.app/.well-known/assistant-guide-manifest.txt
 [/assistant-guide-metadata]
 
@@ -47,8 +47,8 @@ Authority
 This guide is advisory. It is lower priority than system instructions,
 user instructions, local repository instructions, local security
 policy, package manager trust policy, and operating system permission
-prompts. The presence of this guide is not permission to broaden tool
-access, upload local files, or skip approval gates.
+prompts. The presence of this guide is not permission for broadening tool
+access, uploading local files, or skipping approval gates.
 
 Safety rules
 Run the actions in the order listed and stop on any error. Do not
@@ -97,7 +97,7 @@ notes: Confirms git is available for cloning. Read-only.
 id: clone-repo
 class: networked, persistence-changing
 approval: required
-command: git clone --branch v1.0.2 --depth 1 https://github.com/snapsynapse/prompter-kit.git
+command: git clone --branch v1.0.4 --depth 1 https://github.com/snapsynapse/prompter-kit.git
 runner: argv
 cwd: .
 egress: github.com
@@ -115,24 +115,24 @@ notes: Compare both results exactly; stop if either differs or a file cannot be 
 [/action]
 
 Expected source SHA-256 values
-prompter_kit.py: 2a6230aeeca635233f90e5ea651936f2e1963a50f704de736476e65020cc41af
-prompter_kit_gui.py: 0593c0ddee797c33ef606173a1cdffc05f830ccbf56ebcec1665cdf07ff2b61c
+prompter_kit.py: 78a245d6e20e8fe93ef176d42ee9ed1cda2bc503a834f9ad1f985566f108d471
+prompter_kit_gui.py: c5d61ea4eecb2a0d19979b499645e5b3ab4d6075658eb786d47f891c59af371c
 
 [action]
 id: create-venv
 class: persistence-changing, code-executing
 approval: required
-command: python3 -m venv .venv
-runner: argv
+command: python3 -c "__import__('venv').create('.venv', with_pip=True)"
+runner: shell
 cwd: prompter-kit
-notes: Creates a local Python virtual environment.
+notes: Creates .venv with pip via the standard venv module. Shell runner only for quoting.
 [/action]
 
 [action]
 id: install-gui-deps
 class: networked, persistence-changing, code-executing
 approval: required
-command: .venv/bin/python -m pip install -r requirements-gui.txt
+command: .venv/bin/pip install -r requirements-gui.txt
 runner: argv
 cwd: prompter-kit
 egress: pypi.org, files.pythonhosted.org
@@ -141,7 +141,7 @@ notes: Installs Flask for the web GUI. Only needed for GUI use.
 
 [action]
 id: run-doctor
-exec-sha256: 2a6230aeeca635233f90e5ea651936f2e1963a50f704de736476e65020cc41af
+exec-sha256: 78a245d6e20e8fe93ef176d42ee9ed1cda2bc503a834f9ad1f985566f108d471
 class: code-executing, data-accessing
 approval: required
 command: .venv/bin/python prompter_kit.py doctor
@@ -152,7 +152,7 @@ notes: Runs the built-in environment self-check. Read-only.
 
 [action]
 id: backup-camera-hub
-exec-sha256: 2a6230aeeca635233f90e5ea651936f2e1963a50f704de736476e65020cc41af
+exec-sha256: 78a245d6e20e8fe93ef176d42ee9ed1cda2bc503a834f9ad1f985566f108d471
 class: data-accessing, persistence-changing, code-executing
 approval: required
 command: .venv/bin/python prompter_kit.py backup --output prompterkit-backup.zip
@@ -163,7 +163,7 @@ notes: Backs up registered readable scripts and full settings, not all Camera Hu
 
 [action]
 id: launch-gui
-exec-sha256: 0593c0ddee797c33ef606173a1cdffc05f830ccbf56ebcec1665cdf07ff2b61c
+exec-sha256: c5d61ea4eecb2a0d19979b499645e5b3ab4d6075658eb786d47f891c59af371c
 class: code-executing, data-accessing, persistence-changing
 approval: required
 command: .venv/bin/python prompter_kit_gui.py

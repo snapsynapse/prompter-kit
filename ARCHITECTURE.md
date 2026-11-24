@@ -103,7 +103,9 @@ newline is a soft return kept inside the chapter. A chapter that itself
 contains a blank line (possible only from manual Camera Hub authoring) splits
 in two on export-then-reimport. Empty chapters also do not round-trip.
 From 1.0.2, .txt imports preserve literal characters and nonblank-line spaces;
-.md imports use the existing Markdown stripping rules. Both normalize line
+.md imports use the existing Markdown stripping rules. From 1.0.4, link and
+image patterns stop at a `[` inside the label or URL, so nested brackets are
+left as text; this keeps stripping linear on long hostile lines. Both normalize line
 endings and collapse blank-line separators.
 
 Backup zips contain `AppSettings.json` at the root plus `Texts/<GUID>.json`
@@ -113,9 +115,10 @@ restore removes the entire live Texts directory, including unregistered files,
 and replaces unrelated settings too. Keep an independent full directory copy.
 Merge can overwrite unregistered files at incoming GUID paths. Archives contain
 private script content and settings. `restore` rejects unexpected archive paths,
-duplicate entries, or GUID mismatches; it does not fully validate script schema
-or limit entry sizes. A restored script with an unrecognized shape makes the
-schema guard refuse later writes until that file is removed or replaced.
+duplicate entries, GUID mismatches, entries over 16 MiB or a total over
+256 MiB, and scripts whose known fields fail the schema check. From 1.0.4 it
+refuses those archives before writing, so a bad shape can no longer lock later
+writes. Unknown extra fields are still accepted.
 
 PrompterKit also writes automatic pre-write snapshots (same zip format) to
 `PrompterKitBackups/` inside the data directory. This is separate from GUI
@@ -147,8 +150,12 @@ Grouped by responsibility:
 - Camera Hub lifecycle: `camerahub_is_running`, `camerahub_stop`,
   `camerahub_start` (macOS `osascript` / `open`, trying current
   `Elgato Camera Hub` and legacy `Camera Hub` app names; Windows
-  `tasklist`, a forced `taskkill /F`, and `start`, each resolved by bare
-  name through the normal Windows search path).
+  `tasklist.exe` and a forced `taskkill.exe /F` by absolute System32 path,
+  and `CameraHub.exe` launched without a shell from `Program Files\Elgato\
+  CameraHub` or `Camera Hub`, or from the absolute path in
+  `PROMPTERKIT_CAMERAHUB_EXE`. From 1.0.4 nothing is resolved by bare name,
+  so a planted program in the working folder is not run. The Windows paths
+  are covered by mocked tests only, not checked on a Windows machine).
 - Diagnostics: `diagnose_camerahub`, backing the `doctor` command.
 - CLI layer: `_cmd_*` handlers and `main`, which builds the argparse
   subcommands.
@@ -203,7 +210,9 @@ restoring from a known-good backup.
 `restore` adds a validation pass before writing anything: the backup zip must
 contain a parseable `AppSettings.json`, every GUID must match
 `[A-Za-z0-9._-]+`, no unexpected paths may be present, and each script's
-embedded GUID must match its filename. Replace mode builds a staged `Texts/`
+embedded GUID must match its filename, entry sizes must stay under the
+limits above, and each script must pass the same known-field check the write
+guard uses. Replace mode builds a staged `Texts/`
 directory first, swaps it into place, and restores the prior live files if the
 swap or verification fails. Merge mode rolls back any script JSON files it
 writes if the final `AppSettings.json` update fails, preserving pre-existing
@@ -228,7 +237,8 @@ python3 scripts/check_agent_surfaces.py
 - `tests/test_importer.py` — import, export, Markdown stripping, round trips.
 - `tests/test_crud.py` — delete, rename, reindex, backup, restore.
 - `tests/test_write_guard.py` — schema guard and automatic pre-write snapshots.
-- `tests/test_diagnostics.py` — `doctor` checks and Camera Hub path discovery.
+- `tests/test_diagnostics.py` — `doctor` checks, Camera Hub path discovery,
+  lifecycle commands, and CLI flags.
 - `tests/test_gui.py` — GUI routes, CSRF protection, upload validation, host
   check, response headers, script-name handling.
 - `tests/fixtures/` — sanitized Camera Hub data used by the suite.

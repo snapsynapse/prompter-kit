@@ -4,7 +4,8 @@
 
 | Version | Supported |
 |---|---|
-| 1.0.x | Best-effort security review |
+| 1.0.4 | Best-effort security review |
+| 1.0.0 to 1.0.3 | No; upgrade to 1.0.4, which fixes browser-origin attacks on the local GUI |
 | < 1.0 | No |
 
 PrompterKit 1.0.x is feature-complete and in maintenance mode. No feature
