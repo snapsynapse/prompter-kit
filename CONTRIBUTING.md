@@ -67,7 +67,11 @@ This does not validate the release anchor. Commit the final guide and sidecars,
 create the new tag on that commit, and run the strict check before pushing the
 commit and tag for Pages deployment. Never move an existing tag. Publish the
 release, then verify the live guide with the hosted GuideCheck verifier.
-Level 4 is the guide-file target; Level 5 requires a separate enforcing runtime.
+Under profile 2.0.0 the hosted verifier awards Levels 1 to 3 only, and local
+verification caps at Level 3. Level 5 requires a separate enforcing runtime.
+If deploy-pages fails with "No artifacts named github-pages" right after a
+successful upload, rerun the failed job; this happened twice on 2026-11-24 and
+the rerun passed without changes.
 
 ### DNS provenance
 GuideCheck profile 2.0.0 (anchor policy 1.0.0-strict) accepts a DNS TXT hash
@@ -98,9 +102,17 @@ After the operator confirms DNS, complete the separately authorized
 commit/tag/release sequence above. Then check DNS propagation and byte identity
 of all live surfaces, and submit the canonical guide URL to the hosted verifier.
 Record verifier version, timestamp, guide hash, achieved level, and findings.
-Level 4 with zero blocking findings is the closeout gate. Disclose remaining
-warnings and that the hosted verifier does not establish runtime Level 5 or safety.
-Guide 1.4.0 closed this gate on 2026-09-05: hosted verifier 0.7.1, Level 4, zero
+The closeout gate is the highest level the current hosted verifier awards,
+with zero blocking findings and matching DNS and repository anchors. Disclose
+remaining warnings and that the hosted verifier does not establish runtime
+Level 5 or safety.
+Guide 1.5.0 closed this gate on 2026-11-24: hosted verifier 2.0.0 with required
+profile 2.0.0, Level 3, zero blocking findings, three warnings (no
+X-Content-Type-Options or Strict-Transport-Security from the host, and
+repository-file evidence that cannot establish independence). The record is
+guidecheck-verification.json on the
+[v1.0.4 release](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4).
+Guide 1.4.0, under profile 0.7.1, recorded on 2026-09-05: hosted verifier 0.7.1, Level 4, zero
 blocking findings, two warnings (the host sends neither X-Content-Type-Options
 nor Strict-Transport-Security). The record is guidecheck-verification.json on the
 [v1.0.3 release](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.3).

@@ -40,12 +40,13 @@ The repository checks copy and hash consistency, not full GuideCheck conformance
 Use the [verifier](https://guidecheck.org/verify) to assess conformance; neither
 conformance nor matching hashes establish software safety.
 Level 5 requires a separate enforcing runtime. The guide installs the
-reviewed app 1.0.4 with script hash checks. The hosted verifier recorded
-Level 4 for the previous guide 1.4.0 on 2026-09-05 (record on the
-[v1.0.3 release](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.3));
-guide 1.5.0 has its own result on the
-[v1.0.4 release](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4)
-once verified. Results are dated; rerun the verifier for the current state.
+reviewed app 1.0.4 with script hash checks. The hosted GuideCheck 2.0.0
+verifier recorded Level 3 for guide 1.5.0 on 2026-11-24 with zero blocking
+findings; DNS and repository anchors matched (record on the
+[v1.0.4 release](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4)).
+Under profile 2.0.0 no current GuideCheck verifier awards Level 4, so no Level 4
+claim is made. The previous guide 1.4.0 recorded Level 4 under profile 0.7.1.
+Results are dated; rerun the verifier for the current state.
 See [publishing and DNS steps](CONTRIBUTING.md#dns-provenance).
 
 ### Terminal install

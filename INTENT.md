@@ -73,7 +73,7 @@ remains authoritative for purpose, maintenance boundaries and exceptions.
 The declaration does not certify conformance or reopen feature development.
 Guide 1.5.0, GuideCheck profile 2.0.0 and app 1.0.4 remain separate identities;
 [CONTRIBUTING.md](CONTRIBUTING.md#agent-guide-publishing) retains the existing
-publishing gates and hosted Level 4 target. AI Posture applicability and
+publishing gates and hosted verification gate (Level 3, the 2.0.0 maximum). AI Posture applicability and
 owner-assigned levels remain unresolved.
 
 ## Exceptions to Repo Standards

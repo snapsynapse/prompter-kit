@@ -84,8 +84,9 @@ standards:
     profile: human-verifiable-assistant-guide 2.0.0
     reason: >-
       The published-guide contract declares guide 1.5.0 for app 1.0.4. Adoption
-      records that implementation, not an achieved level. CONTRIBUTING.md retains
-      the hosted Level 4 target with zero blocking findings and disclosure of
+      records that implementation, not an achieved level. CONTRIBUTING.md sets the
+      closeout gate at the highest level the hosted verifier awards (Level 3
+      under profile 2.0.0) with zero blocking findings and disclosure of
       remaining warnings; Level 5 needs a separate enforcing runtime. Local
       copy/tag checks do not establish independent anchor administration,
       hosted conformance, runtime enforcement or software safety. Hosted
