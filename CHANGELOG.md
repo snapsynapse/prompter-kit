@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Documentation
+- Retire the project as of 2026-11-23. prompterkit.app becomes the project
+  record: status banner, the record video (click-to-load, privacy-enhanced
+  embed) with its transcript, the reason it stopped, and a facts card. README
+  and llms.txt carry the same status, video and reason; install commands pin
+  the final release v1.0.4. The assistant guide is unchanged.
 - Pages artifact includes `.well-known`; upload-pages-artifact v4 and later
   drop dot directories, which briefly served 404 for the assistant guide.
 - Pages deploy runs in its own job after upload, fixing the intermittent

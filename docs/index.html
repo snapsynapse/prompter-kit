@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-project-status="retired">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-  <title>PrompterKit &mdash; Manage your Elgato Prompter scripts</title>
-  <meta name="description" content="PrompterKit is a free local tool for YouTube creators. Import, export, rename, reorder, and back up Elgato Prompter scripts without Camera Hub lock-in.">
+  <title>PrompterKit: Elgato Prompter script tools (Retired)</title>
+  <meta name="description" content="Retired in 2026. PrompterKit was a free local tool to import, export, rename, reorder and back up Elgato Prompter scripts. The code stays on GitHub.">
   <meta name="keywords" content="elgato prompter, camera hub scripts, teleprompter import, prompter backup, youtube creator tools, elgato camera hub, teleprompter management">
   <meta name="author" content="Sam Rogers">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+  <meta name="project-status" content="retired">
   <meta name="theme-color" content="#ff5252">
   <link rel="canonical" href="https://prompterkit.app/">
 
@@ -23,8 +24,8 @@
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="PrompterKit">
-  <meta property="og:title" content="PrompterKit">
-  <meta property="og:description" content="Import, export, rename, reorder, and back up Elgato Prompter scripts without Camera Hub lock-in. Free local tool for YouTube creators.">
+  <meta property="og:title" content="PrompterKit (Retired)">
+  <meta property="og:description" content="Retired in 2026. PrompterKit was a free local tool to import, export, rename, reorder and back up Elgato Prompter scripts. The code stays on GitHub.">
   <meta property="og:image" content="https://prompterkit.app/imgs/og.png">
   <meta property="og:image:alt" content="PrompterKit &mdash; Manage your Elgato Prompter scripts">
   <meta property="og:image:width" content="1200">
@@ -32,7 +33,7 @@
   <meta property="og:url" content="https://prompterkit.app/">
   <meta property="og:locale" content="en_US">
   <meta property="article:published_time" content="2026-04-19T00:00:00Z">
-  <meta property="article:modified_time" content="2026-11-23T00:00:00Z">
+  <meta property="article:modified_time" content="2026-11-24T00:00:00Z">
   <meta property="article:author" content="Sam Rogers">
   <meta property="article:publisher" content="https://snapsynapse.com/">
   <meta property="article:section" content="Creator Tools">
@@ -44,8 +45,8 @@
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="PrompterKit">
-  <meta name="twitter:description" content="Import, export, rename, reorder, and back up Elgato Prompter scripts without Camera Hub lock-in. Free local tool for YouTube creators.">
+  <meta name="twitter:title" content="PrompterKit (Retired)">
+  <meta name="twitter:description" content="Retired in 2026. PrompterKit was a free local tool to import, export, rename, reorder and back up Elgato Prompter scripts. The code stays on GitHub.">
   <meta name="twitter:image" content="https://prompterkit.app/imgs/og.png">
   <meta name="twitter:site" content="@snapsynapse">
   <meta name="twitter:creator" content="@snapsynapse">
@@ -61,12 +62,14 @@
     "@type": "TechArticle",
     "headline": "PrompterKit",
     "alternativeHeadline": "Manage your Elgato Prompter scripts",
-    "description": "PrompterKit is a free, open-source local tool for managing Elgato Prompter scripts. Use the web GUI for import, export, rename, delete, and index normalization, or use the CLI for the complete reorder, backup, restore, and Camera Hub lifecycle workflow.",
+    "description": "PrompterKit (retired 2026) was a free, open-source local tool for managing Elgato Prompter scripts. Its web GUI covers import, export, rename, delete, and index normalization; its CLI covers reorder, backup, restore, and the Camera Hub lifecycle. The code is still available, unmaintained.",
     "inLanguage": "en",
     "url": "https://prompterkit.app/",
     "mainEntityOfPage": { "@type": "WebPage", "@id": "https://prompterkit.app/" },
     "datePublished": "2026-04-19",
-    "dateModified": "2026-11-23",
+    "dateModified": "2026-11-24",
+    "creativeWorkStatus": "Retired",
+    "video": { "@id": "https://prompterkit.app/#record-video" },
     "author": {
       "@type": "Person",
       "name": "Sam Rogers",
@@ -98,6 +101,24 @@
       "url": "https://snapsynapse.com/"
     },
     "sameAs": ["https://github.com/snapsynapse/prompter-kit"]
+  }
+  </script>
+
+  <!-- JSON-LD: VideoObject -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "@id": "https://prompterkit.app/#record-video",
+    "name": "PrompterKit, for the record",
+    "description": "Import, export and backup tools for the Elgato Prompter, built because the vendor's software had none. A record of PrompterKit, made in November 2026: what it was for, where it came from, how it worked, and why it ended.",
+    "thumbnailUrl": "https://prompterkit.app/imgs/legacy-poster.jpg",
+    "uploadDate": "2026-11-24T07:56:27-08:00",
+    "duration": "PT1M58S",
+    "embedUrl": "https://www.youtube-nocookie.com/embed/RsO0PZlJXsA",
+    "url": "https://youtube.com/watch?v=RsO0PZlJXsA",
+    "inLanguage": "en",
+    "isPartOf": { "@id": "https://prompterkit.app/" }
   }
   </script>
 
@@ -179,27 +200,59 @@
     nav .links a { color: var(--text-muted); }
     nav .links a:hover { color: var(--text); text-decoration: none; }
 
-    /* GitHub star button */
-    .gh-star {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.35rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg-alt);
-      color: var(--text) !important;
-      font-weight: 600;
+    /* Retired record blocks */
+    .status-banner {
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2, transparent);
+      padding: 0.75rem 0;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+    .status-banner strong { color: var(--text); }
+    .status-banner a { text-decoration: underline; text-underline-offset: 2px; }
+    .status-chip {
+      display: inline-block;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      padding: 0 0.6rem;
       font-size: 0.8rem;
-      transition: border-color 0.1s ease, transform 0.05s ease;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text);
     }
-    .gh-star:hover {
-      border-color: var(--accent);
-      text-decoration: none;
-      transform: translateY(-1px);
+    .record-video {
+      position: relative;
+      display: block;
+      max-width: 860px;
+      margin: 0 auto 1rem;
+      aspect-ratio: 16 / 9;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #000;
     }
-    .gh-star svg { flex: 0 0 auto; color: #eab308; }
-    .gh-star span { white-space: nowrap; }
+    .record-video img,
+    .record-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; }
+    .record-video .play {
+      position: absolute; inset: 0; margin: auto;
+      width: 84px; height: 84px; border-radius: 50%;
+      background: rgba(0, 0, 0, 0.72); border: 2px solid #fff;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .record-video .play svg { margin-left: 6px; }
+    .record-video:hover .play { background: var(--accent); }
+    .record-video:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .record-top { padding: 2rem 0 0; }
+    .record-caption { max-width: 860px; margin: 0 auto 1.5rem; font-size: 0.9rem; color: var(--text-muted); text-align: center; }
+    .transcript { max-width: 860px; margin: 0 auto 2rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; }
+    .transcript summary { cursor: pointer; font-weight: 600; }
+    .transcript p { margin-top: 0.75rem; color: var(--text-muted); }
+    .facts { max-width: 860px; margin: 2rem auto 0; display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 1.5rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; }
+    .facts dt { color: var(--text-muted); }
+    .facts dd { margin: 0; }
+    .facts a, .record-caption a { text-decoration: underline; text-underline-offset: 2px; }
+    @media (max-width: 520px) { .facts { grid-template-columns: 1fr; gap: 0.15rem 0; } .facts dd { margin-bottom: 0.6rem; } }
 
     /* Byline */
     .byline {
@@ -514,7 +567,7 @@
     @media (max-width: 520px) {
       .cmd-list li { flex-direction: column; gap: 0.35rem; }
       .cmd-list code { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
-      nav .links.mobile-compact a:not(.gh-star) { display: none; }
+      nav .links.mobile-compact a:not(.nav-keep) { display: none; }
       nav .container { gap: 0.5rem; }
     }
   </style>
@@ -535,42 +588,91 @@
       <span>PrompterKit</span>
     </a>
     <div class="links mobile-compact">
+      <a href="#record" class="nav-keep">Record</a>
       <a href="#features">Features</a>
-      <a href="#install">Install</a>
+      <a href="#install">Final release</a>
       <a href="#usage">Usage</a>
-      <a href="https://github.com/snapsynapse/prompter-kit" class="gh-star" target="_blank" rel="noopener" aria-label="Star snapsynapse/prompter-kit on GitHub">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-          <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/>
-        </svg>
-        <span>Star on GitHub</span>
-      </a>
+      <a href="https://github.com/snapsynapse/prompter-kit" class="nav-keep" target="_blank" rel="noopener">Code on GitHub</a>
     </div>
   </div>
 </nav>
 
 <main id="main-content">
+<aside class="status-banner" role="note" aria-label="Project status">
+  <div class="container">
+    <strong>Retired.</strong>
+    PrompterKit was retired on <time datetime="2026-11-23">November 23, 2026</time>.
+    This page is the record. <a href="#record-video">Watch the two-minute version</a>.
+  </div>
+</aside>
+
+<section class="record-top" aria-label="Project record video">
+  <div class="container">
+    <a class="record-video" id="record-video"
+       href="https://youtube.com/watch?v=RsO0PZlJXsA"
+       data-video-id="RsO0PZlJXsA"
+       data-video-title="PrompterKit, for the record"
+       aria-label="Play video: PrompterKit, for the record (1 minute 58 seconds)">
+      <img src="/imgs/legacy-poster.jpg" width="1280" height="720" alt="" loading="lazy">
+      <span class="play" aria-hidden="true">
+        <svg width="30" height="34" viewBox="0 0 30 34" fill="#fff" focusable="false"><path d="M0 0l30 17L0 34z"/></svg>
+      </span>
+    </a>
+    <p class="record-caption">1:58 &middot; recorded <time datetime="2026-11-23">November 23, 2026</time> &middot; <a href="https://youtube.com/watch?v=RsO0PZlJXsA" target="_blank" rel="noopener">Watch on YouTube</a> &middot; <a href="#transcript">Transcript</a></p>
+
+    <details class="transcript" id="transcript">
+      <summary>Transcript</summary>
+      <p>PrompterKit is a suite of tools for the Elgato Prompter. Sam loves that prompter. But the OEM software that ran it couldn't import or export a script, and there was no way to back anything up. After one incident where he lost everything, he set out to build something better.</p>
+      <p>He built PrompterKit for his own use first, and to press Elgato to add the basics. Text and Markdown went in as Prompter scripts, scripts came back out as text, and the whole library could be backed up and restored.</p>
+      <p>It runs from the command line or a local web page. One command turns a Markdown file into a Prompter script and checks the result. Another packs the whole library up into a single backup file, ready to restore.</p>
+      <p>The part we're proudest of is the install. This was released when AI-aided installs were just catching on, but there was no safe way to do that. So we wrote a guide an agent could follow, with approval gates. That guide grew into the GuideCheck standard, which added published hashes. PrompterKit was one of its first applications.</p>
+      <p>This open source software started as a rewrite of spieldbergo's importer, credited at the top of the README, and it merged a fix from another open source community contributor. And the pressure worked. We promoted it during the NAB show, where Elgato was showing new products, and it caught on. Not long after, Elgato updated Camera Hub with some of the same features, and after a few small fixes and security enhancements, our last feature release followed.</p>
+      <p>PrompterKit was retired in November of twenty twenty-six. The code is available but is no longer actively maintained. For the record.</p>
+    </details>
+  </div>
+</section>
+
 <section class="hero">
   <div class="container">
     <h1>Manage Elgato Prompter scripts without Camera Hub lock-in.</h1>
     <p class="byline">
+      <span class="status-chip">Retired</span>
+      <span class="sep">&middot;</span>
       By <a href="https://linkedin.com/in/samrogers" target="_blank" rel="noopener author">Sam Rogers</a>, <a href="https://snapsynapse.com" target="_blank" rel="noopener">Snap Synapse</a>
       <span class="sep">&middot;</span>
       Published <time datetime="2026-04-19">April 19, 2026</time>
       <span class="sep">&middot;</span>
-      Updated <time id="repo-updated-date" datetime="2026-11-23">November 23, 2026</time>
+      Updated <time id="repo-updated-date" datetime="2026-11-24">November 24, 2026</time>
       <span class="sep">&middot;</span>
       <a href="https://opensource.org/licenses/MIT" rel="license" target="_blank">MIT</a>
     </p>
-    <p class="subtitle">A free local tool for Elgato Prompter creators. Import and export plain text, organize your library, and create registered-library backups with the CLI.</p>
-    <p class="hook">Use the GUI for text import/export, rename, delete, and index normalization. Use the CLI for explicit reorder and JSON backup/restore.</p>
+    <p class="subtitle">A free local tool for Elgato Prompter creators. It imports and exports plain text, organizes the library, and makes registered-library backups with the CLI.</p>
+    <p class="hook">The GUI handles text import/export, rename, delete, and index normalization. The CLI handles explicit reorder and JSON backup/restore.</p>
     <aside class="canonical-note" role="note" style="text-align:left;margin-top:1.5rem">
-      <strong>Maintenance-only (November 2026).</strong> No feature development or Camera Hub compatibility tracking is planned. Security review is best-effort, with no guaranteed response or fix timeline. A June 2026 macOS live eval passed without recording the Camera Hub version; fixture tests do not establish current compatibility. Close Camera Hub before writes and keep an independent data copy. See the <a href="https://github.com/snapsynapse/prompter-kit/blob/main/README.md#backup-scope-and-restore">backup limits</a>, <a href="https://github.com/snapsynapse/prompter-kit/blob/main/SECURITY.md">support policy</a>, and <a href="https://github.com/snapsynapse/prompter-kit/blob/main/ARCHITECTURE.md">format reference</a> for forks.
+      <strong>Unmaintained since November 2026.</strong> The code still runs, but it's no longer maintained: nobody tracks Camera Hub compatibility, and security reports get best-effort review at most. A June 2026 macOS live eval passed without recording the Camera Hub version; fixture tests don't establish current compatibility. If you use it, close Camera Hub before writes and keep an independent data copy. See the <a href="https://github.com/snapsynapse/prompter-kit/blob/main/README.md#backup-scope-and-restore">backup limits</a> and the <a href="https://github.com/snapsynapse/prompter-kit/blob/main/ARCHITECTURE.md">format reference</a> for forks.
     </aside>
-    <p><img src="/imgs/og.png" alt="PrompterKit &mdash; Manage your Elgato Prompter scripts" width="1200" height="630" style="max-width:100%;height:auto;border-radius:12px;margin-top:1.5rem"></p>
-    <div class="cta-row">
-      <a href="#install" class="btn btn-primary">Install PrompterKit</a>
-      <a href="https://github.com/snapsynapse/prompter-kit" class="btn btn-secondary" target="_blank" rel="noopener">View on GitHub</a>
+    <div class="cta-row" style="margin-top:2rem">
+      <a href="#record" class="btn btn-primary">Why it stopped</a>
+      <a href="https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4" class="btn btn-secondary" target="_blank" rel="noopener">Final release v1.0.4</a>
     </div>
+  </div>
+</section>
+
+<section class="alt" id="record">
+  <div class="container">
+    <h2>The record</h2>
+
+    <h3>Why it stopped</h3>
+    <p>Pressuring Elgato seems to have worked. Not long after our public release, they updated Camera Hub with some of the same features. Our software is still available, but it's no longer maintained. There's more detail in the <a href="https://github.com/snapsynapse/prompter-kit/blob/main/INTENT.md">repository</a>.</p>
+
+    <dl class="facts">
+      <dt>Status</dt><dd>Retired, <time datetime="2026-11-23">November 23, 2026</time></dd>
+      <dt>Origin</dt><dd>Sam Rogers, Snap Synapse, April 2026. A rewrite of <a href="https://github.com/spieldbergo/elgato_prompter_text_importer" target="_blank" rel="noopener">spieldbergo/elgato_prompter_text_importer</a> (MIT)</dd>
+      <dt>Standard</dt><dd>One of the first applications of <a href="https://guidecheck.org/" target="_blank" rel="noopener">GuideCheck</a>, adopted <time datetime="2026-05-21">May 21, 2026</time></dd>
+      <dt>Final release</dt><dd><a href="https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4" target="_blank" rel="noopener">v1.0.4</a>, <time datetime="2026-11-23">November 23, 2026</time> (final security patch; last feature release 1.0.0, June 9, 2026)</dd>
+      <dt>License</dt><dd>MIT</dd>
+      <dt>Code</dt><dd><a href="https://github.com/snapsynapse/prompter-kit" target="_blank" rel="noopener">github.com/snapsynapse/prompter-kit</a></dd>
+    </dl>
   </div>
 </section>
 
@@ -612,8 +714,8 @@
 
 <section id="install">
   <div class="container">
-    <h2>Quick setup</h2>
-    <p>PrompterKit requires Python 3.10 or later. Check with <code>python3 --version</code>. If Python is missing, install it from <a href="https://python.org" target="_blank" rel="noopener">python.org</a>.</p>
+    <h2>Final release</h2>
+    <p>The final release is <a href="https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4" target="_blank" rel="noopener">v1.0.4</a>. The steps below install it. PrompterKit requires Python 3.10 or later. Check with <code>python3 --version</code>. If Python is missing, install it from <a href="https://python.org" target="_blank" rel="noopener">python.org</a>.</p>
     <p>Runs locally. No accounts, no telemetry, no cloud sync. Your scripts stay on your machine.</p>
     <p><strong>Use with care:</strong> PrompterKit edits local Camera Hub data files. Schema checks cover known fields; restore bypasses the live guard. Unknown formats can break reads and writes. Close Camera Hub before write operations and use PrompterKit at your own risk. The software is provided under the MIT License without warranty.</p>
 
@@ -638,7 +740,7 @@
               <div>
                 <strong>Download PrompterKit</strong>
                 <p>Literal</p>
-                <pre>git clone https://github.com/snapsynapse/prompter-kit.git
+                <pre>git clone --branch v1.0.4 https://github.com/snapsynapse/prompter-kit.git
 cd prompter-kit</pre>
               </div>
             </li>
@@ -765,18 +867,18 @@ python3 prompter_kit_gui.py</pre>
   <div class="container">
     <div style="max-width:680px;margin:0 auto;text-align:center">
       <h2>Free and open source</h2>
-      <p>I built PrompterKit because I needed it. After losing a library of scripts to a Camera Hub reinstall with no recovery path, I wrote the tool I wished existed. Now it's free for every creator who runs into the same wall.</p>
-      <p>MIT-licensed. No accounts, no subscriptions, no telemetry. Your scripts stay on your machine. The source is on GitHub and contributions are welcome.</p>
+      <p>I built PrompterKit because I needed it. After losing a library of scripts to a Camera Hub reinstall with no recovery path, I wrote the tool I wished existed, and made it free for every creator who ran into the same wall.</p>
+      <p>MIT-licensed. No accounts, no subscriptions, no telemetry. Your scripts stay on your machine. The source stays on GitHub, and forks are welcome.</p>
       <div class="cta-row" style="margin-top:2rem">
         <a href="https://github.com/snapsynapse/prompter-kit" class="btn btn-primary" target="_blank" rel="noopener">View the source on GitHub</a>
         <a href="https://github.com/snapsynapse/prompter-kit/blob/main/CHANGELOG.md" class="btn btn-secondary" target="_blank" rel="noopener">Changelog</a>
       </div>
 
       <aside class="canonical-note" role="note">
-        <strong>Canonical reference.</strong> This page is the authoritative home for PrompterKit.
+        <strong>Canonical record.</strong> PrompterKit was retired on November 23, 2026, and this page is its permanent record.
         Any discussion on YouTube creator forums, Reddit, or social media should link to
         <a href="https://prompterkit.app/">prompterkit.app</a> as the source.
-        Last updated: <time id="canonical-updated-date" datetime="2026-11-23">2026-11-23</time>.
+        Last updated: <time id="canonical-updated-date" datetime="2026-11-24">2026-11-24</time>.
         <a href="https://github.com/snapsynapse/prompter-kit/commits/main/CHANGELOG.md" target="_blank" rel="noopener">Revision history &rarr;</a>
       </aside>
     </div>
@@ -794,6 +896,7 @@ python3 prompter_kit_gui.py</pre>
       </div>
       <div class="footer-links">
         <a href="https://github.com/snapsynapse/prompter-kit" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://youtube.com/watch?v=RsO0PZlJXsA" target="_blank" rel="noopener">Record video</a>
         <a href="https://github.com/snapsynapse/prompter-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
         <a href="https://github.com/snapsynapse/prompter-kit/commits/main/CHANGELOG.md" target="_blank" rel="noopener">Revisions</a>
         <a href="/.well-known/assistant-guide.txt">Assistant guide</a>
@@ -803,6 +906,32 @@ python3 prompter_kit_gui.py</pre>
   </div>
 </footer>
 
+<script>
+  (function () {
+    var link = document.getElementById('record-video');
+    if (!link) return;
+    // Following the caption's "Transcript" link opens the transcript.
+    var transcript = document.getElementById('transcript');
+    document.querySelectorAll('a[href="#transcript"]').forEach(function (a) {
+      a.addEventListener('click', function () { if (transcript) transcript.open = true; });
+    });
+    link.addEventListener('click', function (event) {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+      event.preventDefault();
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(link.dataset.videoId) + '?autoplay=1&rel=0';
+      frame.title = link.dataset.videoTitle;
+      frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      frame.allowFullscreen = true;
+      frame.referrerPolicy = 'strict-origin-when-cross-origin';
+      var holder = document.createElement('div');
+      holder.className = 'record-video';
+      holder.appendChild(frame);
+      link.replaceWith(holder);
+      frame.focus();
+    });
+  })();
+</script>
 
 </body>
 </html>

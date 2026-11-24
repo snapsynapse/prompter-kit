@@ -1,18 +1,27 @@
 # PrompterKit
 
-![PrompterKit -- Manage your Elgato Prompter scripts](imgs/og.png)
+**Retired on November 23, 2026.** The code stays available and still runs, but
+it is no longer maintained. The site stays online as the project's record.
+
+[![PrompterKit, for the record (1:58)](imgs/legacy-poster.jpg)](https://youtube.com/watch?v=RsO0PZlJXsA)
 
 Manage Elgato Prompter scripts through a local web GUI or CLI: import text and
 Markdown, export text, rename, delete, reorder, and create library backups.
 
 Site: https://prompterkit.app/
 Repo: https://github.com/snapsynapse/prompter-kit
+Record video: https://youtube.com/watch?v=RsO0PZlJXsA
 
-> Maintenance-only, reviewed November 2026. No feature development or Camera
-> Hub compatibility tracking is planned. Security reports receive best-effort
-> review, with no guaranteed response or fix timeline. Forks are welcome.
-> Safeguards reduce some write risks; they do not guarantee compatibility or
-> recovery. See [SECURITY.md](SECURITY.md) and [ROADMAP.md](ROADMAP.md).
+## Why it stopped
+
+Pressuring Elgato seems to have worked. Not long after our public release, they
+updated Camera Hub with some of the same features. Our software is still
+available, but it's no longer maintained. The final release is [v1.0.4](https://github.com/snapsynapse/prompter-kit/releases/tag/v1.0.4),
+a security patch; the last feature release was 1.0.0. See [INTENT.md](INTENT.md).
+
+> No Camera Hub compatibility tracking continues, and security reports get
+> best-effort review at most, with no fix timeline. Forks are welcome. Safeguards reduce some write risks; they do not guarantee
+> compatibility or recovery. See [SECURITY.md](SECURITY.md).
 
 Based on [spieldbergo/elgato_prompter_text_importer](https://github.com/spieldbergo/elgato_prompter_text_importer) (MIT).
 
